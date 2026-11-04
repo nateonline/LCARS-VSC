@@ -1,0 +1,26 @@
+{
+  "name": "theme-lcars",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "1.0.0",
+  "publisher": "vscode",
+  "license": "MIT",
+  "engines": {
+    "vscode": "*"
+  },
+  "categories": ["Themes"],
+  "contributes": {
+    "themes": [
+      {
+        "id": "LCARS",
+        "label": "%themeLabel%",
+        "uiTheme": "vs-dark",
+        "path": "./themes/lcars-color-theme.json"
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nateonline/LCARS-VSC.git"
+  }
+}

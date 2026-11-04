@@ -1,0 +1,276 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/*
+ * Full-window LCARS views. LcarsViewManager toggles exactly one of `.lcars-view-editor`,
+ * `.lcars-view-sidebar`, `.lcars-view-panel` and `.lcars-view-auxiliary` on the workbench
+ * container, and adds `.lcars-view-out` / `.lcars-view-in` while swiping between them.
+ */
+
+/* ---------- Transitions between views ---------- */
+
+.lcars.lcars-animated.lcars-view-out .part.sidebar,
+.lcars.lcars-animated.lcars-view-out .part.editor,
+.lcars.lcars-animated.lcars-view-out .part.panel,
+.lcars.lcars-animated.lcars-view-out .part.auxiliarybar {
+	animation: lcars-view-swipe-out 0.26s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.lcars.lcars-animated.lcars-view-in .part.sidebar,
+.lcars.lcars-animated.lcars-view-in .part.editor,
+.lcars.lcars-animated.lcars-view-in .part.panel,
+.lcars.lcars-animated.lcars-view-in .part.auxiliarybar {
+	animation: lcars-view-swipe-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* A bright bar sweeps across the window while the new view swipes on behind it */
+.lcars.lcars-animated.lcars-view-out::after,
+.lcars.lcars-animated.lcars-view-in::after {
+	content: '';
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	width: 14px;
+	left: -20px;
+	border-radius: 999px;
+	background: var(--lcars-orange);
+	box-shadow: 0 0 24px 6px var(--lcars-orange);
+	pointer-events: none;
+	z-index: 2500;
+	animation: lcars-view-sweep 0.78s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+.lcars.lcars-animated.lcars-view-in::after {
+	animation: none;
+	opacity: 0;
+}
+
+@keyframes lcars-view-swipe-out {
+	from { clip-path: inset(0 0 0 0); opacity: 1; }
+	to { clip-path: inset(0 0 0 100%); opacity: 0.2; }
+}
+
+@keyframes lcars-view-swipe-in {
+	0% { clip-path: inset(0 100% 0 0); filter: brightness(2.5); }
+	70% { filter: brightness(1.4); }
+	100% { clip-path: inset(0 0 0 0); filter: none; }
+}
+
+@keyframes lcars-view-sweep {
+	from { left: -20px; }
+	to { left: calc(100% + 6px); }
+}
+
+/* ---------- Back / view switcher status bar entry ---------- */
+
+.lcars .part.statusbar .statusbar-item[id="lcars.back"] > .statusbar-item-label {
+	min-width: 84px;
+	margin-right: 6px;
+	padding: 0 16px 0 12px;
+	border-radius: 999px 999px 999px 999px;
+	background-color: var(--lcars-black);
+	color: var(--lcars-orange);
+	font-weight: bold;
+	text-align: center;
+	letter-spacing: 0.12em;
+}
+
+.lcars .part.statusbar .statusbar-item[id="lcars.back"]:hover > .statusbar-item-label {
+	background-color: var(--lcars-peach);
+	color: var(--lcars-black);
+}
+
+/* ---------- Side bar view: one pill per entry ---------- */
+
+.lcars.lcars-view-sidebar .part.sidebar {
+	border-top-left-radius: 0;
+}
+
+.lcars.lcars-view-sidebar .part.sidebar > .title {
+	height: 44px;
+	padding-left: 12px;
+	border-bottom: 4px solid var(--lcars-orange);
+}
+
+.lcars.lcars-view-sidebar .part.sidebar > .title > .title-label h2 {
+	font-size: 22px;
+	letter-spacing: 0.3em;
+	color: var(--lcars-orange);
+}
+
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row {
+	--lcars-pill: var(--lcars-peach);
+	max-width: min(100%, 640px);
+	border-radius: 999px;
+	background-color: var(--lcars-pill);
+	color: var(--lcars-black);
+	box-shadow: 0 0 0 1px var(--lcars-black) inset;
+	transition: filter 0.15s ease-out, max-width 0.3s ease-out;
+}
+
+/* Folders, groups and other expandable entries */
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row[aria-expanded] {
+	--lcars-pill: var(--lcars-lavender);
+}
+
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row,
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row .monaco-icon-label,
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row .monaco-icon-label::after,
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row .label-description,
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row .monaco-highlighted-label,
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row .codicon,
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row .decoration-icon {
+	color: var(--lcars-black) !important;
+}
+
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row:hover {
+	filter: brightness(1.15);
+	max-width: min(100%, 720px);
+}
+
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row.focused,
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row.selected {
+	--lcars-pill: var(--lcars-orange);
+	outline: none;
+	box-shadow: 0 0 0 2px var(--lcars-blue) inset;
+}
+
+/* Source control: the color of the pill tells the kind of change */
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row:has(.decoration-icon.codicon-diff-modified) { --lcars-pill: var(--lcars-tan); }
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row:has(.decoration-icon.codicon-diff-added) { --lcars-pill: #99cc99; }
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row:has(.decoration-icon.codicon-diff-removed) { --lcars-pill: var(--lcars-red); }
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row:has(.decoration-icon.codicon-diff-renamed) { --lcars-pill: var(--lcars-blue); }
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row:has(.decoration-icon.codicon-diff-ignored) { --lcars-pill: var(--lcars-purple); }
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row:has(.decoration-icon.codicon-warning) { --lcars-pill: var(--lcars-magenta); }
+
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row:has(.name.strike-through) { --lcars-pill: var(--lcars-red); }
+
+/* Source control and other repository headers keep their own colors */
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row.focused:has(.decoration-icon),
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row.selected:has(.decoration-icon) {
+	filter: brightness(1.2) saturate(1.2);
+}
+
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row .monaco-tl-indent {
+	display: none;
+}
+
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row .actions .action-label {
+	color: var(--lcars-black);
+}
+
+.lcars.lcars-view-sidebar .part.sidebar .monaco-list .monaco-list-row .monaco-count-badge {
+	background-color: var(--lcars-black);
+	color: var(--lcars-orange);
+	border-radius: 999px;
+}
+
+/* Pane headers become bold segmented bars in the full-window view */
+.lcars.lcars-view-sidebar .monaco-pane-view .pane > .pane-header {
+	max-width: min(100%, 760px);
+	font-weight: bold;
+}
+
+/* Animated decoration that fills the empty right-hand side of the side bar view */
+.lcars .lcars-hub-art {
+	display: none;
+}
+
+.lcars.lcars-view-sidebar .lcars-hub-art {
+	position: absolute;
+	top: 56px;
+	right: 0;
+	bottom: 8px;
+	width: min(36%, 560px);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+	align-items: flex-end;
+	gap: 8px;
+	overflow: hidden;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.lcars.lcars-view-sidebar .part.sidebar .lcars-hub-art-pill {
+	flex: 1 1 0;
+	max-height: 48px;
+	width: var(--lcars-art-width, 60%);
+	border-radius: 999px 0 0 999px;
+	opacity: 0.85;
+}
+
+.lcars.lcars-animated.lcars-view-sidebar .lcars-hub-art-pill {
+	animation:
+		lcars-art-slide var(--lcars-art-duration, 9s) var(--lcars-art-delay, 0s) ease-in-out infinite alternate,
+		lcars-art-swipe calc(var(--lcars-art-duration, 9s) * 2.3) var(--lcars-art-delay, 0s) cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes lcars-art-slide {
+	from { transform: translateX(0); }
+	to { transform: translateX(34%); }
+}
+
+/* Swipes off through the left edge, then back on from the right edge */
+@keyframes lcars-art-swipe {
+	0%, 40% { clip-path: inset(0 0 0 0); }
+	48% { clip-path: inset(0 0 0 100%); }
+	52% { clip-path: inset(0 100% 0 0); }
+	60%, 100% { clip-path: inset(0 0 0 0); }
+}
+
+/* ---------- Panel view ---------- */
+
+.lcars.lcars-view-panel .part.panel {
+	border-top: none;
+	border-top-left-radius: 0;
+}
+
+.lcars.lcars-view-panel .part.panel > .composite.title {
+	height: 44px;
+	border-bottom: 4px solid var(--lcars-orange);
+}
+
+.lcars.lcars-view-panel .part.panel > .composite.title .composite-bar .action-item .action-label {
+	font-size: 16px;
+	padding: 4px 22px;
+}
+
+.lcars.lcars-view-panel .part.panel .monaco-list .monaco-list-row {
+	--lcars-pill: var(--lcars-lavender);
+	max-width: min(100%, 900px);
+	border-radius: 999px;
+	background-color: var(--lcars-pill);
+	box-shadow: 0 0 0 1px var(--lcars-black) inset;
+}
+
+.lcars.lcars-view-panel .part.panel .monaco-list .monaco-list-row,
+.lcars.lcars-view-panel .part.panel .monaco-list .monaco-list-row .monaco-icon-label,
+.lcars.lcars-view-panel .part.panel .monaco-list .monaco-list-row .codicon:not(.codicon-error):not(.codicon-warning) {
+	color: var(--lcars-black);
+}
+
+.lcars.lcars-view-panel .part.panel .monaco-list .monaco-list-row.selected,
+.lcars.lcars-view-panel .part.panel .monaco-list .monaco-list-row.focused {
+	--lcars-pill: var(--lcars-orange);
+}
+
+/* ---------- Auxiliary bar (chat) view ---------- */
+
+.lcars.lcars-view-auxiliary .part.auxiliarybar {
+	border-top-left-radius: 0;
+}
+
+.lcars.lcars-view-auxiliary .part.auxiliarybar > .composite.title {
+	height: 44px;
+	border-bottom: 4px solid var(--lcars-lavender);
+}
+
+/* ---------- Editor view ---------- */
+
+.lcars.lcars-view-editor .part.editor {
+	border-top-left-radius: var(--lcars-elbow-radius);
+	overflow: hidden;
+}

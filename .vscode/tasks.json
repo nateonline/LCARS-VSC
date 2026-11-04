@@ -13,6 +13,30 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "LCARS-VSC: Build",
+			"detail": "Install dependencies and build LCARS-VSC (core and built-in extensions, including the LCARS theme).",
+			"dependsOn": [
+				"Install Dependencies",
+				"Build Fast"
+			],
+			"dependsOrder": "sequence",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "LCARS-VSC: Build & Run",
+			"detail": "Build LCARS-VSC and launch it with an isolated user data directory.",
+			"dependsOn": [
+				"LCARS-VSC: Build",
+				"Run VS Code"
+			],
+			"dependsOrder": "sequence",
+			"problemMatcher": []
+		},
+		{
 			"label": "Run VS Code",
 			"detail": "Run VS Code with a user data directory inside the worktree.",
 			"type": "shell",

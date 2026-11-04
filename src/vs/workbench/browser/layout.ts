@@ -183,6 +183,9 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 	private readonly _onDidChangeAuxiliaryBarMaximized = this._register(new Emitter<void>());
 	readonly onDidChangeAuxiliaryBarMaximized = this._onDidChangeAuxiliaryBarMaximized.event;
 
+	private readonly _onDidChangeSideBarMaximized = this._register(new Emitter<void>());
+	readonly onDidChangeSideBarMaximized = this._onDidChangeSideBarMaximized.event;
+
 	private readonly _onDidLayoutMainContainer = this._register(new Emitter<IDimension>());
 	readonly onDidLayoutMainContainer = this._onDidLayoutMainContainer.event;
 
@@ -1721,9 +1724,11 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 		this._register(this.storageService.onWillSaveState(() => {
 
 			// Side Bar Size
-			const sideBarSize = this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_HIDDEN)
-				? this.workbenchGrid.getViewCachedVisibleSize(this.sideBarPartView)
-				: this.workbenchGrid.getViewSize(this.sideBarPartView).width;
+			const sideBarSize = this.sideBarMaximizedRestore
+				? this.sideBarMaximizedRestore.sideBarSize
+				: this.stateModel.getRuntimeValue(LayoutStateKeys.SIDEBAR_HIDDEN)
+					? this.workbenchGrid.getViewCachedVisibleSize(this.sideBarPartView)
+					: this.workbenchGrid.getViewSize(this.sideBarPartView).width;
 			this.stateModel.setInitializationValue(LayoutStateKeys.SIDEBAR_SIZE, sideBarSize as number);
 
 			// Panel Size
@@ -1901,6 +1906,10 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 	}
 
 	private setEditorHidden(hidden: boolean): void {
+		if (!hidden) {
+			this.setSideBarMaximized(false);
+		}
+
 		if (!hidden && this.setAuxiliaryBarMaximized(false) && this.isVisible(Parts.EDITOR_PART)) {
 			return; // return: leaving maximised auxiliary bar made this part visible
 		}
@@ -1919,7 +1928,7 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 
 		// The editor and panel cannot be hidden at the same time
 		// unless we have a maximized auxiliary bar
-		if (hidden && !this.isVisible(Parts.PANEL_PART) && !this.isAuxiliaryBarMaximized()) {
+		if (hidden && !this.isVisible(Parts.PANEL_PART) && !this.isAuxiliaryBarMaximized() && !this.isSideBarMaximized()) {
 			this.setPanelHidden(false, true);
 		}
 	}
@@ -1946,6 +1955,10 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 	}
 
 	private setSideBarHidden(hidden: boolean): void {
+		if (hidden) {
+			this.setSideBarMaximized(false);
+		}
+
 		if (!hidden && this.setAuxiliaryBarMaximized(false) && this.isVisible(Parts.SIDEBAR_PART)) {
 			return; // return: leaving maximised auxiliary bar made this part visible
 		}
@@ -1966,7 +1979,7 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 		if (hidden && this.paneCompositeService.getActivePaneComposite(ViewContainerLocation.Sidebar)) {
 			this.paneCompositeService.hideActivePaneComposite(ViewContainerLocation.Sidebar);
 
-			if (!this.isAuxiliaryBarMaximized()) {
+			if (!this.isAuxiliaryBarMaximized() && !this.isSideBarMaximized()) {
 				this.focusPanelOrEditor(); // do not auto focus when auxiliary bar is maximized
 			}
 		}
@@ -2089,6 +2102,10 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 			return; // Return if not initialized fully (https://github.com/microsoft/vscode/issues/105480)
 		}
 
+		if (!hidden) {
+			this.setSideBarMaximized(false);
+		}
+
 		if (!hidden && this.setAuxiliaryBarMaximized(false) && this.isVisible(Parts.PANEL_PART)) {
 			return; // return: leaving maximised auxiliary bar made this part visible
 		}
@@ -2123,7 +2140,8 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 			this.paneCompositeService.hideActivePaneComposite(ViewContainerLocation.Panel);
 			if (
 				!isIOS &&						// do not auto focus on iOS (https://github.com/microsoft/vscode/issues/127832)
-				!this.isAuxiliaryBarMaximized()	// do not auto focus when auxiliary bar is maximized
+				!this.isAuxiliaryBarMaximized() &&	// do not auto focus when auxiliary bar is maximized
+				!this.isSideBarMaximized()
 			) {
 				focusEditor = true;
 			}
@@ -2243,11 +2261,80 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
 		return true;
 	}
 
+	private sideBarMaximizedRestore: { readonly sideBarSize: number; readonly editorVisible: boolean; readonly panelVisible: boolean; readonly auxiliaryBarVisible: boolean } | undefined;
+
+	isSideBarMaximized(): boolean {
+		return !!this.sideBarMaximizedRestore;
+	}
+
+	/**
+	 * Maximizes the side bar so that it fills the whole window (editor, panel and auxiliary bar are hidden)
+	 * or restores the previous visibility. The state is not persisted across reloads.
+	 *
+	 * @returns `true` if there was a change in the maximization state.
+	 */
+	setSideBarMaximized(maximized: boolean): boolean {
+		if (
+			!this.workbenchGrid ||
+			this.inMaximizedAuxiliaryBarTransition ||		// prevent re-entrance
+			(maximized === this.isSideBarMaximized())		// return early if state is already present
+		) {
+			return false;
+		}
+
+		if (maximized) {
+			this.setAuxiliaryBarMaximized(false);
+		}
+
+		this.inMaximizedAuxiliaryBarTransition = true;
+		try {
+			if (maximized) {
+				if (!this.isVisible(Parts.SIDEBAR_PART)) {
+					this.setSideBarHidden(false);
+				}
+
+				const restore = {
+					sideBarSize: this.workbenchGrid.getViewSize(this.sideBarPartView).width,
+					editorVisible: this.isVisible(Parts.EDITOR_PART),
+					panelVisible: this.isVisible(Parts.PANEL_PART),
+					auxiliaryBarVisible: this.isVisible(Parts.AUXILIARYBAR_PART)
+				};
+				this.sideBarMaximizedRestore = restore;
+
+				if (restore.auxiliaryBarVisible) {
+					this.setAuxiliaryBarHidden(true, true);
+				}
+				if (restore.panelVisible) {
+					this.setPanelHidden(true, true);
+				}
+				if (restore.editorVisible) {
+					this.setEditorHidden(true);
+				}
+			} else if (this.sideBarMaximizedRestore) {
+				const restore = this.sideBarMaximizedRestore;
+				this.sideBarMaximizedRestore = undefined;
+
+				this.setEditorHidden(!restore.editorVisible);
+				this.setPanelHidden(!restore.panelVisible, true);
+				this.setAuxiliaryBarHidden(!restore.auxiliaryBarVisible, true);
+
+				const size = this.workbenchGrid.getViewSize(this.sideBarPartView);
+				this.workbenchGrid.resizeView(this.sideBarPartView, { width: restore.sideBarSize, height: size.height });
+			}
+		} finally {
+			this.inMaximizedAuxiliaryBarTransition = false;
+		}
+
+		this._onDidChangeSideBarMaximized.fire();
+
+		return true;
+	}
+
 	isPanelMaximized(): boolean {
 		return (
 			this.getPanelAlignment() === 'center' || 	// the workbench grid currently prevents us from supporting panel
 			!isHorizontal(this.getPanelPosition())		// maximization with non-center panel alignment
-		) && !this.isVisible(Parts.EDITOR_PART, mainWindow) && !this.isAuxiliaryBarMaximized();
+		) && !this.isVisible(Parts.EDITOR_PART, mainWindow) && !this.isAuxiliaryBarMaximized() && !this.isSideBarMaximized();
 	}
 
 	toggleMaximizedPanel(): void {

@@ -1,3 +1,32 @@
+# LCARS-VSC
+
+A fork of [Visual Studio Code - Open Source](https://github.com/microsoft/vscode) restyled after the LCARS (Library Computer Access/Retrieval System) interface from Star Trek.
+
+- **Product name:** `LCARS-VSC` (application `lcars-vsc`, data folder `.lcars-vsc`), configured in `product.json`.
+- **Default theme:** `LCARS` (`extensions/theme-lcars`) — black background with orange, peach, lavender and blue accents.
+
+## LCARS Interface
+
+`src/vs/workbench/contrib/lcars` restyles the whole workbench: colored pill-ended tabs, section bars and activity-bar blocks, elbow-capped panels, condensed uppercase chrome, animated ribbons whose segments resize, swipe on/off and change color, a stardate readout in the status bar, and a boot sequence in which the panels power up over about four seconds. Settings: `lcars.animations.enabled` and `lcars.animations.bootSequence`; animations are also disabled when the OS requests reduced motion.
+
+### Full-window views
+
+The side bar, editor, panel and chat are shown one at a time instead of side by side. The side bar is a full-window hub in which every entry is one pill: the Explorer lists a pill per file and folder, and Source Control lists a pill per changed file, colored by change kind (modified, added, deleted, renamed). Opening a pill swaps to the editor (or diff) with a swipe animation, and the **Back** pill at the left of the status bar (or `Alt+Home`, command *Toggle Editor and Hub View*) returns to the hub. Showing the panel or chat takes the whole window too. Set `lcars.views.enabled` to `false` and reload to restore the classic layout. This is built on a new "maximized side bar" layout state (`IWorkbenchLayoutService.setSideBarMaximized`).
+
+> Note: this was authored without being able to build or launch Electron; the CSS selectors and layout interplay are untested at runtime.
+
+## Building and Running
+
+From VS Code, run the task **LCARS-VSC: Build** (default build task, `Ctrl/Cmd+Shift+B`) or **LCARS-VSC: Build & Run**. From a shell:
+
+```sh
+pnpm install
+pnpm run build-fast
+./scripts/code.sh
+```
+
+---
+
 # Visual Studio Code - Open Source ("Code - OSS")
 [![Feature Requests](https://img.shields.io/github/issues/microsoft/vscode/feature-request.svg)](https://github.com/microsoft/vscode/issues?q=is%3Aopen+is%3Aissue+label%3Afeature-request+sort%3Areactions-%2B1-desc)
 [![Bugs](https://img.shields.io/github/issues/microsoft/vscode/bug.svg)](https://github.com/microsoft/vscode/issues?utf8=✓&q=is%3Aissue+is%3Aopen+label%3Abug)
