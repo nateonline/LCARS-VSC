@@ -547,6 +547,11 @@ export interface IWorkbenchLayoutService extends ILayoutService {
 	 */
 	readonly onDidChangeAuxiliaryBarMaximized: Event<void>;
 
+	/*
+	 * Emit when side bar maximized state changes.
+	 */
+	readonly onDidChangeSideBarMaximized: Event<void>;
+
 	/**
 	 * True if a default layout with default editors was applied at startup
 	 */
@@ -650,6 +655,19 @@ export interface IWorkbenchLayoutService extends ILayoutService {
 	 * Returns true if the auxiliary sidebar is maximized.
 	 */
 	isAuxiliaryBarMaximized(): boolean;
+
+	/**
+	 * Maximizes or restores the side bar. A maximized side bar fills the window
+	 * and hides the editor, panel and auxiliary bar.
+	 *
+	 * @returns `true` if there was a change in the maximization state.
+	 */
+	setSideBarMaximized(maximized: boolean): boolean;
+
+	/**
+	 * Returns true if the side bar is maximized.
+	 */
+	isSideBarMaximized(): boolean;
 
 	/**
 	 * Returns true if the main window has a border.

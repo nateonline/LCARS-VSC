@@ -1,0 +1,379 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/*
+ * LCARS-VSC visual language. Everything is scoped to `.lcars`, which LcarsContribution
+ * toggles on the main workbench container. Motion is further gated by `.lcars-animated`
+ * (disabled by the `lcars.animations.enabled` setting or `prefers-reduced-motion`).
+ */
+
+.monaco-workbench.lcars {
+	--lcars-black: #000000;
+	--lcars-orange: #ff9900;
+	--lcars-peach: #ffcc99;
+	--lcars-tan: #ffcc66;
+	--lcars-lavender: #cc99cc;
+	--lcars-purple: #9999cc;
+	--lcars-blue: #99ccff;
+	--lcars-magenta: #cc6699;
+	--lcars-red: #cc6666;
+	--lcars-cap-radius: 999px;
+	--lcars-elbow-radius: 36px;
+	--lcars-font: "Antonio", "Oswald", "Helvetica Neue Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+}
+
+/* Colour utility classes used by the generated ribbon and boot elements */
+.lcars .lcars-color-orange { background-color: var(--lcars-orange); }
+.lcars .lcars-color-peach { background-color: var(--lcars-peach); }
+.lcars .lcars-color-lavender { background-color: var(--lcars-lavender); }
+.lcars .lcars-color-blue { background-color: var(--lcars-blue); }
+.lcars .lcars-color-magenta { background-color: var(--lcars-magenta); }
+.lcars .lcars-color-tan { background-color: var(--lcars-tan); }
+.lcars .lcars-color-purple { background-color: var(--lcars-purple); }
+.lcars .lcars-color-red { background-color: var(--lcars-red); }
+
+/* ---------- Typography: condensed, uppercase chrome. Editor text is untouched. ---------- */
+
+body .monaco-workbench.lcars {
+	font-family: var(--lcars-font);
+	letter-spacing: 0.04em;
+}
+
+.lcars .part.activitybar,
+.lcars .part.sidebar > .title,
+.lcars .monaco-pane-view .pane-header,
+.lcars .part.panel > .composite.title,
+.lcars .part.auxiliarybar > .composite.title,
+.lcars .part.editor .tabs-container > .tab,
+.lcars .part.statusbar,
+.lcars .part.titlebar .menubar,
+.lcars .monaco-button {
+	text-transform: uppercase;
+}
+
+/* ---------- Ribbons: rows of colored pills that resize, swipe and change color ---------- */
+
+.lcars .lcars-ribbon {
+	position: fixed;
+	left: 0;
+	right: 0;
+	display: flex;
+	gap: 4px;
+	padding: 0 6px;
+	pointer-events: none;
+	z-index: 2400;
+}
+
+.lcars .lcars-ribbon-top {
+	top: 0;
+	height: 4px;
+}
+
+.lcars .lcars-ribbon-bottom {
+	bottom: 22px;
+	height: 3px;
+}
+
+.lcars .lcars-ribbon-segment {
+	flex: 1 1 0;
+	min-width: 12px;
+	border-radius: var(--lcars-cap-radius);
+}
+
+.lcars.lcars-animated .lcars-ribbon-segment {
+	transition: flex-grow 1.6s cubic-bezier(0.65, 0, 0.35, 1), background-color 0.8s ease;
+}
+
+.lcars.lcars-animated .lcars-ribbon-segment.lcars-swiping {
+	animation: lcars-swipe-off-on 1.4s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Swipe off through the right edge, then back on from the left edge */
+@keyframes lcars-swipe-off-on {
+	0% { clip-path: inset(0 0 0 0); }
+	45% { clip-path: inset(0 0 0 100%); }
+	55% { clip-path: inset(0 100% 0 0); }
+	100% { clip-path: inset(0 0 0 0); }
+}
+
+/* ---------- Boot sequence ---------- */
+
+.lcars .lcars-boot-veil {
+	position: fixed;
+	inset: 0;
+	z-index: 2600;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	background: var(--lcars-black);
+	color: var(--lcars-orange);
+	text-transform: uppercase;
+	pointer-events: none;
+	animation: lcars-boot-veil 4.2s ease-in forwards;
+}
+
+.lcars .lcars-boot-title {
+	font-size: 56px;
+	letter-spacing: 0.3em;
+	padding-left: 0.3em;
+	animation: lcars-boot-text 1.6s ease-out both;
+}
+
+.lcars .lcars-boot-subtitle {
+	font-size: 18px;
+	letter-spacing: 0.4em;
+	color: var(--lcars-lavender);
+	animation: lcars-boot-text 1.6s 0.5s ease-out both, lcars-blink 1s 1.5s steps(2, start) infinite;
+}
+
+.lcars .lcars-boot-bar {
+	display: flex;
+	gap: 6px;
+	width: min(560px, 70vw);
+	height: 14px;
+	margin-top: 18px;
+}
+
+.lcars .lcars-boot-bar-segment {
+	flex: 1;
+	border-radius: var(--lcars-cap-radius);
+	animation: lcars-wipe-in 0.9s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+@keyframes lcars-boot-veil {
+	0%, 55% { opacity: 1; background: var(--lcars-black); }
+	100% { opacity: 0; background: transparent; }
+}
+
+@keyframes lcars-boot-text {
+	from { opacity: 0; clip-path: inset(0 100% 0 0); }
+	to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+
+@keyframes lcars-wipe-in {
+	from { clip-path: inset(0 100% 0 0); }
+	to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes lcars-blink {
+	to { opacity: 0.25; }
+}
+
+/* Panels power up one after another, each swiping on from its left edge */
+.lcars.lcars-booting .part {
+	animation: lcars-panel-power-on 1.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.lcars.lcars-booting .part.titlebar { animation-delay: 1.2s; }
+.lcars.lcars-booting .part.activitybar { animation-delay: 1.6s; }
+.lcars.lcars-booting .part.sidebar { animation-delay: 2s; }
+.lcars.lcars-booting .part.editor { animation-delay: 2.4s; }
+.lcars.lcars-booting .part.auxiliarybar { animation-delay: 2.7s; }
+.lcars.lcars-booting .part.panel { animation-delay: 2.9s; }
+.lcars.lcars-booting .part.statusbar { animation-delay: 3.2s; }
+
+@keyframes lcars-panel-power-on {
+	0% { opacity: 0; clip-path: inset(0 100% 0 0); filter: brightness(3); }
+	60% { opacity: 1; filter: brightness(1.8); }
+	100% { opacity: 1; clip-path: inset(0 0 0 0); filter: none; }
+}
+
+/* ---------- Title bar ---------- */
+
+.lcars .part.titlebar {
+	padding-top: 4px;
+	border-bottom: 3px solid var(--lcars-magenta);
+}
+
+.lcars .part.titlebar .command-center .action-item.command-center-center {
+	border-radius: var(--lcars-cap-radius);
+	border: 2px solid var(--lcars-purple);
+}
+
+/* ---------- Activity bar: a column of colored blocks ---------- */
+
+.lcars .part.activitybar {
+	border-radius: 0 0 var(--lcars-elbow-radius) 0;
+	overflow: hidden;
+}
+
+.lcars .part.activitybar .monaco-action-bar .action-item {
+	margin: 3px 0;
+}
+
+.lcars .part.activitybar .monaco-action-bar .action-item .action-label {
+	border-radius: 0 var(--lcars-cap-radius) var(--lcars-cap-radius) 0;
+	color: var(--lcars-black);
+	background: linear-gradient(var(--lcars-orange), var(--lcars-orange)) no-repeat left center / 0% 100%;
+	transition: background-size 0.25s ease-out;
+}
+
+.lcars .part.activitybar .monaco-action-bar .action-item:nth-child(4n + 1) .action-label { --lcars-item: var(--lcars-orange); }
+.lcars .part.activitybar .monaco-action-bar .action-item:nth-child(4n + 2) .action-label { --lcars-item: var(--lcars-lavender); }
+.lcars .part.activitybar .monaco-action-bar .action-item:nth-child(4n + 3) .action-label { --lcars-item: var(--lcars-blue); }
+.lcars .part.activitybar .monaco-action-bar .action-item:nth-child(4n) .action-label { --lcars-item: var(--lcars-tan); }
+
+.lcars .part.activitybar .monaco-action-bar .action-item:hover .action-label,
+.lcars .part.activitybar .monaco-action-bar .action-item.checked .action-label {
+	background-image: linear-gradient(var(--lcars-item, var(--lcars-orange)), var(--lcars-item, var(--lcars-orange)));
+	background-size: 100% 100%;
+}
+
+/* ---------- Side bar: elbow cap and colored section bars ---------- */
+
+.lcars .part.sidebar,
+.lcars .part.auxiliarybar {
+	border-top-left-radius: var(--lcars-elbow-radius);
+	overflow: hidden;
+}
+
+.lcars .part.sidebar::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 6px;
+	background: var(--lcars-orange);
+	border-top-left-radius: var(--lcars-elbow-radius);
+	pointer-events: none;
+	z-index: 5;
+}
+
+.lcars .part.sidebar > .title > .title-label h2 {
+	color: var(--lcars-orange);
+	font-size: 14px;
+	letter-spacing: 0.15em;
+}
+
+.lcars .monaco-pane-view .pane > .pane-header {
+	color: var(--lcars-black);
+	margin: 2px 0;
+	border-radius: 0 var(--lcars-cap-radius) var(--lcars-cap-radius) 0;
+	background-color: var(--lcars-purple);
+	transition: filter 0.2s ease-out, padding-left 0.25s ease-out;
+}
+
+.lcars .monaco-pane-view .pane:nth-child(4n + 1) > .pane-header { background-color: var(--lcars-purple); }
+.lcars .monaco-pane-view .pane:nth-child(4n + 2) > .pane-header { background-color: var(--lcars-lavender); }
+.lcars .monaco-pane-view .pane:nth-child(4n + 3) > .pane-header { background-color: var(--lcars-tan); }
+.lcars .monaco-pane-view .pane:nth-child(4n) > .pane-header { background-color: var(--lcars-blue); }
+
+.lcars .monaco-pane-view .pane > .pane-header:hover {
+	filter: brightness(1.2);
+	padding-left: 6px;
+}
+
+.lcars .monaco-pane-view .pane > .pane-header .actions .action-label,
+.lcars .monaco-pane-view .pane > .pane-header .codicon {
+	color: var(--lcars-black);
+}
+
+/* ---------- Editor tabs: pill-ended tabs with a hover swipe ---------- */
+
+.lcars .part.editor > .content .editor-group-container > .title .tabs-container > .tab {
+	margin: 4px 3px 0 0;
+	border-radius: var(--lcars-cap-radius) var(--lcars-cap-radius) 0 0;
+	border-bottom: 3px solid var(--lcars-magenta);
+	background-image: linear-gradient(var(--lcars-tan), var(--lcars-tan));
+	background-repeat: no-repeat;
+	background-position: left center;
+	background-size: 0% 100%;
+	transition: background-size 0.3s ease-out;
+}
+
+.lcars .part.editor > .content .editor-group-container > .title .tabs-container > .tab:hover {
+	background-size: 100% 100%;
+}
+
+.lcars .part.editor > .content .editor-group-container > .title .tabs-container > .tab.active {
+	border-bottom-color: var(--lcars-orange);
+}
+
+/* ---------- Panel and auxiliary bar titles ---------- */
+
+.lcars .part.panel > .composite.title .composite-bar .action-item .action-label {
+	border-radius: var(--lcars-cap-radius);
+	padding: 2px 14px;
+	color: var(--lcars-black);
+	background: var(--lcars-lavender);
+}
+
+.lcars .part.panel > .composite.title .composite-bar .action-item.checked .action-label {
+	background: var(--lcars-orange);
+}
+
+.lcars .part.panel {
+	border-top: 4px solid var(--lcars-purple);
+	border-top-left-radius: var(--lcars-elbow-radius);
+}
+
+/* ---------- Status bar: segmented pills ---------- */
+
+.lcars .part.statusbar {
+	border-top: 2px solid var(--lcars-black);
+}
+
+.lcars .part.statusbar .statusbar-item > .statusbar-item-label {
+	border-radius: var(--lcars-cap-radius);
+	padding: 0 10px;
+}
+
+.lcars .part.statusbar .statusbar-item:nth-child(odd) > .statusbar-item-label {
+	background-color: color-mix(in srgb, var(--lcars-black) 14%, transparent);
+}
+
+.lcars .part.statusbar .statusbar-item[id="lcars.stardate"] > .statusbar-item-label {
+	background-color: var(--lcars-black);
+	color: var(--lcars-orange);
+	animation: none;
+}
+
+.lcars.lcars-animated .part.statusbar .statusbar-item:hover > .statusbar-item-label {
+	animation: lcars-wipe-in 0.35s ease-out;
+}
+
+/* ---------- Controls ---------- */
+
+.lcars .monaco-button {
+	border-radius: var(--lcars-cap-radius);
+	padding-left: 16px;
+	padding-right: 16px;
+}
+
+.lcars .monaco-inputbox,
+.lcars .monaco-findInput,
+.lcars .quick-input-widget {
+	border-radius: 14px;
+}
+
+.lcars .quick-input-widget,
+.lcars .notifications-toasts .notification-toast,
+.lcars .monaco-dialog-box,
+.lcars .monaco-menu-container .monaco-menu {
+	border: 2px solid var(--lcars-orange);
+	border-radius: 0 var(--lcars-elbow-radius) 0 var(--lcars-elbow-radius);
+}
+
+.lcars .monaco-list-row,
+.lcars .monaco-menu .monaco-action-bar .action-item .action-label {
+	border-radius: 0 var(--lcars-cap-radius) var(--lcars-cap-radius) 0;
+}
+
+.lcars .monaco-sash {
+	background-color: transparent;
+}
+
+.lcars.lcars-animated .monaco-sash:hover,
+.lcars.lcars-animated .monaco-sash.active {
+	background-color: var(--lcars-orange);
+	transition: background-color 0.2s;
+}
+
+.lcars .editor-instance .monaco-editor .scrollbar .slider {
+	border-radius: var(--lcars-cap-radius);
+}

@@ -195,6 +195,10 @@
 			"project": "vscode-workbench"
 		},
 		{
+			"name": "vs/workbench/contrib/lcars",
+			"project": "vscode-workbench"
+		},
+		{
 			"name": "vs/workbench/contrib/chat",
 			"project": "vscode-workbench"
 		},

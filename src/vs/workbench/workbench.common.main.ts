@@ -348,6 +348,8 @@ import './contrib/relauncher/browser/relauncher.contribution.js';
 
 // Modern UI (experimental)
 import './contrib/modernUI/browser/modernUI.contribution.js';
+import './contrib/lcars/browser/lcars.contribution.js';
+import './contrib/lcars/browser/lcarsViews.js';
 
 // Tasks
 import './contrib/tasks/browser/task.contribution.js';
