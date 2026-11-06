@@ -514,12 +514,6 @@ body .monaco-workbench.lcars {
 	padding: 0 8px;
 }
 
-.lcars .part.statusbar .statusbar-item[id="lcars.stardate"] > .statusbar-item-label {
-	background-color: var(--lcars-black);
-	color: var(--lcars-orange);
-	animation: none;
-}
-
 .lcars.lcars-animated .part.statusbar .statusbar-item:hover > .statusbar-item-label {
 	animation: lcars-wipe-in 0.35s ease-out;
 }

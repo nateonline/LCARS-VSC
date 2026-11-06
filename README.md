@@ -7,7 +7,9 @@ A fork of [Visual Studio Code - Open Source](https://github.com/microsoft/vscode
 
 ## LCARS Interface
 
-`src/vs/workbench/contrib/lcars` restyles the workbench with block-style activity items, section headers and tabs, condensed uppercase chrome, an animated decorative ribbon above the title bar, a stardate readout in the status bar, and a boot sequence in which the panels power up over about four seconds. Settings: `lcars.animations.enabled` and `lcars.animations.bootSequence`; animations are also disabled when the OS requests reduced motion.
+`src/vs/workbench/contrib/lcars` restyles the workbench with block-style activity items, section headers and tabs, condensed uppercase chrome, an animated decorative ribbon above the title bar, and a boot sequence in which the panels power up over about four seconds. Settings: `lcars.animations.enabled` and `lcars.animations.bootSequence`; animations are also disabled when the OS requests reduced motion.
+
+Planned additions are tracked in [BACKLOG.md](BACKLOG.md).
 
 ### Frame layout
 
@@ -20,6 +22,12 @@ The Explorer, editor, panel and secondary side bar keep VS Code's normal resizab
 5. **Editor** — the black space the frame encloses, together with the panel and the secondary side bar.
 
 The activity bar and status bar reserve space for the caps and curves (`LCARS_FRAME_*` in `src/vs/workbench/services/layout/browser/layoutService.ts`), so the frame never covers content or resize handles. `lcarsFrame.ts` measures where the parts are and `media/lcars.css` draws the frame; it follows side bar resizing, a hidden side bar and a side bar on the right. The frame is drawn around the classic layout, so LCARS turns `workbench.experimental.modernUI` off and uses compact editor tabs by default. Setting: `lcars.frame.enabled`. Frame colors and sizes are CSS variables at the top of `lcars.css`.
+
+## Extensions
+
+Extension search and installation use [Open VSX](https://open-vsx.org/), through its VS Code-compatible gallery API configured in `product.json`. This is the registry used by VSCodium; its catalog is not identical to Microsoft's Marketplace, and some Microsoft-only extensions may be unavailable or licensed only for Microsoft's products.
+
+[Microsoft's Marketplace terms](https://code.visualstudio.com/docs/supporting/faq#_i-cant-access-the-visual-studio-marketplace-from-product-fill-in-the-blank-why-not) exclude Code-OSS forks, without a personal-use or non-redistribution exception. LCARS-VSC therefore does not connect to that service. After changing gallery configuration, fully quit and restart the fork.
 
 ## Building and Running
 

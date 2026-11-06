@@ -32,6 +32,11 @@
 	"linuxIconName": "lcars-vsc",
 	"licenseFileName": "LICENSE.txt",
 	"reportIssueUrl": "https://github.com/nateonline/LCARS-VSC/issues/new",
+	"extensionsGallery": {
+		"serviceUrl": "https://open-vsx.org/vscode/gallery",
+		"itemUrl": "https://open-vsx.org/vscode/item",
+		"controlUrl": "https://raw.githubusercontent.com/EclipseFdn/publish-extensions/refs/heads/master/extension-control/extensions.json"
+	},
 	"nodejsArtifactFeed": "",
 	"electronArtifactFeed": "",
 	"urlProtocol": "lcars-vsc",

@@ -12,7 +12,6 @@ import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurati
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
 import { IWorkbenchLayoutService, LayoutSettings } from '../../../services/layout/browser/layoutService.js';
-import { IStatusbarService, StatusbarAlignment } from '../../../services/statusbar/browser/statusbar.js';
 import { LcarsFrame } from './lcarsFrame.js';
 
 const LCARS_CLASS = 'lcars';
@@ -62,11 +61,7 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 	}
 }]);
 
-/**
- * Applies the LCARS visual language to the workbench: it toggles the root classes that
- * `lcars.css` styles, plays the boot sequence, animates the decorative ribbons and
- * publishes a stardate readout in the status bar.
- */
+/** Applies LCARS styling, the boot sequence and decorative ribbon animations to the workbench. */
 class LcarsContribution extends Disposable implements IWorkbenchContribution {
 
 	static readonly ID = 'workbench.contrib.lcars';
@@ -75,8 +70,7 @@ class LcarsContribution extends Disposable implements IWorkbenchContribution {
 
 	constructor(
 		@IWorkbenchLayoutService private readonly layoutService: IWorkbenchLayoutService,
-		@IConfigurationService private readonly configurationService: IConfigurationService,
-		@IStatusbarService statusbarService: IStatusbarService
+		@IConfigurationService private readonly configurationService: IConfigurationService
 	) {
 		super();
 
@@ -91,7 +85,6 @@ class LcarsContribution extends Disposable implements IWorkbenchContribution {
 			}
 		}));
 
-		this.registerStardate(statusbarService);
 		this.playBootSequence(container);
 	}
 
@@ -182,31 +175,6 @@ class LcarsContribution extends Disposable implements IWorkbenchContribution {
 			window.clearTimeout(handle);
 			finish();
 		}));
-	}
-
-	private registerStardate(statusbarService: IStatusbarService): void {
-		const computeText = () => localize('lcarsStardate', "Stardate {0}", LcarsContribution.stardate(new Date()));
-		const entry = this._register(statusbarService.addEntry({
-			name: localize('lcarsStardateName', "Stardate"),
-			text: computeText(),
-			ariaLabel: computeText(),
-			tooltip: localize('lcarsStardateTooltip', "Current stardate"),
-		}, 'lcars.stardate', StatusbarAlignment.RIGHT, 1000));
-
-		const window = getWindow(this.layoutService.mainContainer);
-		const handle = window.setInterval(() => {
-			const text = computeText();
-			entry.update({ name: localize('lcarsStardateName', "Stardate"), text, ariaLabel: text });
-		}, 8640); // one stardate unit tick (a tenth of a unit is 8.64 seconds)
-		this._register(toDisposable(() => window.clearInterval(handle)));
-	}
-
-	private static stardate(date: Date): string {
-		const year = date.getFullYear();
-		const start = new Date(year, 0, 1).getTime();
-		const end = new Date(year + 1, 0, 1).getTime();
-		const fraction = (date.getTime() - start) / (end - start);
-		return ((year - 1947) * 1000 + fraction * 1000).toFixed(1);
 	}
 }
 
