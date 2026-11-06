@@ -19,7 +19,7 @@ import { contrastBorder, activeContrastBorder } from '../../../../platform/theme
 import { EventHelper, addDisposableListener, EventType, clearNode, getWindow, isHTMLElement, $ } from '../../../../base/browser/dom.js';
 import { createStyleSheet } from '../../../../base/browser/domStylesheets.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { Parts, IWorkbenchLayoutService, LayoutSettings, LCARS_FRAME_ELBOW_RISE, isLcarsFrameEnabled } from '../../../services/layout/browser/layoutService.js';
+import { Parts, IWorkbenchLayoutService, LayoutSettings, LCARS_FRAME_ELBOW_RISE, LCARS_FRAME_BOTTOM_PADDING, isLcarsFrameEnabled } from '../../../services/layout/browser/layoutService.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { equals } from '../../../../base/common/arrays.js';
@@ -140,21 +140,18 @@ class StatusbarPart extends Part implements IStatusbarEntryContainer {
 		return this.layoutService.isModernUICompact() ? StatusbarPart.COMPACT_DENSITY_FLOATING_BOTTOM_PADDING : StatusbarPart.FLOATING_BOTTOM_PADDING;
 	}
 
-	/**
-	 * Space reserved above the main status bar items for the LCARS frame's lower elbows,
-	 * which curve from the side columns into the status bar. Applied as top padding in `lcars.css`.
-	 */
-	private get lcarsFrameRise(): number {
+	/** Space reserved for the LCARS lower elbows and the black strip below the status bar. */
+	private get lcarsFramePadding(): number {
 		if (this.getId() !== Parts.STATUSBAR_PART || !isLcarsFrameEnabled(this.layoutService, this.configurationService)) {
 			return 0;
 		}
-		return LCARS_FRAME_ELBOW_RISE;
+		return LCARS_FRAME_ELBOW_RISE + LCARS_FRAME_BOTTOM_PADDING;
 	}
 
 	readonly minimumWidth: number = 0;
 	readonly maximumWidth: number = Number.POSITIVE_INFINITY;
-	get minimumHeight(): number { return StatusbarPart.HEIGHT + this.floatingBottomPadding + this.lcarsFrameRise; }
-	get maximumHeight(): number { return StatusbarPart.HEIGHT + this.floatingBottomPadding + this.lcarsFrameRise; }
+	get minimumHeight(): number { return StatusbarPart.HEIGHT + this.floatingBottomPadding + this.lcarsFramePadding; }
+	get maximumHeight(): number { return StatusbarPart.HEIGHT + this.floatingBottomPadding + this.lcarsFramePadding; }
 
 	//#endregion
 

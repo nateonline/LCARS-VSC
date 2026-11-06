@@ -163,7 +163,8 @@ export class PartsSplash {
 	}
 
 	private _shouldSaveLayoutInfo(): boolean {
-		return !isFullscreen(mainWindow) && !this._environmentService.isExtensionDevelopment && !this._didChangeTitleBarStyle;
+		return !isFullscreen(mainWindow) && !this._environmentService.isExtensionDevelopment && !this._didChangeTitleBarStyle
+			&& this._configService.getValue<boolean>('lcars.animations.bootSequence') !== true;
 	}
 
 	private _removePartsSplash(): void {

@@ -4,15 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import './media/lcars.css';
-import { $, append, getWindow } from '../../../../base/browser/dom.js';
-import { Disposable, DisposableStore, MutableDisposable, toDisposable } from '../../../../base/common/lifecycle.js';
+import { getWindow } from '../../../../base/browser/dom.js';
+import { Disposable, toDisposable } from '../../../../base/common/lifecycle.js';
 import { localize } from '../../../../nls.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
+import { registerColor } from '../../../../platform/theme/common/colorRegistry.js';
+import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
 import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
-import { IWorkbenchLayoutService, LayoutSettings } from '../../../services/layout/browser/layoutService.js';
+import { IWorkbenchLayoutService, LayoutSettings, Parts } from '../../../services/layout/browser/layoutService.js';
 import { LcarsFrame } from './lcarsFrame.js';
+import { LcarsBootScreen } from './lcarsBootScreen.js';
 
 const LCARS_CLASS = 'lcars';
 const LCARS_ANIMATED_CLASS = 'lcars-animated';
@@ -20,11 +23,9 @@ const LCARS_BOOTING_CLASS = 'lcars-booting';
 
 const ENABLE_ANIMATIONS_SETTING = 'lcars.animations.enabled';
 const ENABLE_BOOT_SETTING = 'lcars.animations.bootSequence';
+const AUTO_HIDE_TITLEBAR_SETTING = 'lcars.titleBar.autoHide';
 
-/** Total duration of the boot sequence in milliseconds, kept in sync with `lcars.css`. */
-const BOOT_DURATION_MS = 4200;
-const RIBBON_SEGMENT_COUNT = 9;
-const RIBBON_COLORS = ['orange', 'peach', 'lavender', 'blue', 'magenta', 'tan', 'purple', 'red'];
+registerColor('lcars.startupPromptForeground', { dark: '#777777', light: '#777777', hcDark: '#FFFFFF', hcLight: '#FFFFFF' }, localize('lcars.startupPromptForeground', "Foreground color of the LCARS startup prompt."));
 
 Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerConfiguration({
 	id: 'lcars',
@@ -42,13 +43,19 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			type: 'boolean',
 			default: true,
 			scope: ConfigurationScope.APPLICATION,
-			description: localize('lcars.animations.enabled', "Controls whether the LCARS interface animates its panels and decorative ribbons."),
+			description: localize('lcars.animations.enabled', "Controls whether the LCARS interface animates its panels and controls."),
 		},
 		[ENABLE_BOOT_SETTING]: {
 			type: 'boolean',
 			default: true,
 			scope: ConfigurationScope.APPLICATION,
-			description: localize('lcars.animations.bootSequence', "Controls whether the panels power up one after another when the window opens."),
+			description: localize('lcars.animations.bootSequence', "Controls whether startup waits for a keypress or click before initializing the interface. Escape enters immediately. Animations respect reduced motion."),
+		},
+		[AUTO_HIDE_TITLEBAR_SETTING]: {
+			type: 'boolean',
+			default: true,
+			scope: ConfigurationScope.APPLICATION,
+			description: localize('lcars.titleBar.autoHide', "Hides the custom title bar controls until the title bar is hovered or receives keyboard focus. Keeps the top spacing reserved to avoid moving the editor. Native OS window controls cannot be hidden this way."),
 		}
 	}
 });
@@ -61,27 +68,37 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 	}
 }]);
 
-/** Applies LCARS styling, the boot sequence and decorative ribbon animations to the workbench. */
+/** Applies LCARS styling and the boot sequence to the workbench. */
 class LcarsContribution extends Disposable implements IWorkbenchContribution {
 
 	static readonly ID = 'workbench.contrib.lcars';
 
-	private readonly ribbonDisposables = this._register(new MutableDisposable<DisposableStore>());
-
 	constructor(
 		@IWorkbenchLayoutService private readonly layoutService: IWorkbenchLayoutService,
-		@IConfigurationService private readonly configurationService: IConfigurationService
+		@IConfigurationService private readonly configurationService: IConfigurationService,
+		@IContextMenuService contextMenuService: IContextMenuService,
 	) {
 		super();
 
 		const container = this.layoutService.mainContainer;
 		container.classList.add(LCARS_CLASS);
-		this._register(toDisposable(() => container.classList.remove(LCARS_CLASS, LCARS_ANIMATED_CLASS, LCARS_BOOTING_CLASS)));
+		this._register(toDisposable(() => container.classList.remove(LCARS_CLASS, LCARS_ANIMATED_CLASS, LCARS_BOOTING_CLASS, 'lcars-titlebar-auto-hide', 'lcars-titlebar-menu-open')));
 
 		this.updateAnimations();
+		this.updateTitlebar();
+		this._register(contextMenuService.onDidShowContextMenu(() => {
+			const titlebar = this.layoutService.getContainer(getWindow(container), Parts.TITLEBAR_PART);
+			if (titlebar?.matches(':hover, :focus-within') || titlebar?.classList.contains('menubar-focused')) {
+				container.classList.add('lcars-titlebar-menu-open');
+			}
+		}));
+		this._register(contextMenuService.onDidHideContextMenu(() => container.classList.remove('lcars-titlebar-menu-open')));
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration(ENABLE_ANIMATIONS_SETTING)) {
 				this.updateAnimations();
+			}
+			if (e.affectsConfiguration(AUTO_HIDE_TITLEBAR_SETTING)) {
+				this.updateTitlebar();
 			}
 		}));
 
@@ -96,85 +113,21 @@ class LcarsContribution extends Disposable implements IWorkbenchContribution {
 
 	private updateAnimations(): void {
 		const container = this.layoutService.mainContainer;
-		const enabled = this.animationsEnabled();
-		container.classList.toggle(LCARS_ANIMATED_CLASS, enabled);
-
-		this.ribbonDisposables.clear();
-		const store = new DisposableStore();
-		this.ribbonDisposables.value = store;
-		this.createRibbon(container, 'lcars-ribbon-top', store, enabled);
-	}
-
-	/** Creates a strip of colored pills whose widths shift and which swipe on and off at random. */
-	private createRibbon(container: HTMLElement, className: string, store: DisposableStore, animate: boolean): void {
-		const window = getWindow(container);
-		const ribbon = append(container, $(`.lcars-ribbon.${className}`));
-		store.add(toDisposable(() => ribbon.remove()));
-
-		const segments: HTMLElement[] = [];
-		for (let i = 0; i < RIBBON_SEGMENT_COUNT; i++) {
-			const segment = append(ribbon, $(`.lcars-ribbon-segment.lcars-color-${RIBBON_COLORS[i % RIBBON_COLORS.length]}`));
-			segment.style.flexGrow = String(1 + Math.random() * 5);
-			segments.push(segment);
-		}
-
-		if (!animate) {
-			return;
-		}
-
-		const randomSegment = () => segments[Math.floor(Math.random() * segments.length)];
-
-		const resize = () => {
-			randomSegment().style.flexGrow = String(0.5 + Math.random() * 8);
-		};
-		const swipe = () => {
-			const segment = randomSegment();
-			segment.classList.remove('lcars-swiping');
-			void segment.offsetWidth; // restart the animation
-			segment.classList.add('lcars-swiping');
-			segment.style.flexGrow = String(1 + Math.random() * 6);
-		};
-		const recolor = () => {
-			const segment = randomSegment();
-			const color = RIBBON_COLORS[Math.floor(Math.random() * RIBBON_COLORS.length)];
-			segment.className = `lcars-ribbon-segment lcars-color-${color} lcars-swiping`;
-		};
-
-		const resizeHandle = window.setInterval(resize, 700);
-		const swipeHandle = window.setInterval(swipe, 2300);
-		const recolorHandle = window.setInterval(recolor, 3700);
-		store.add(toDisposable(() => {
-			window.clearInterval(resizeHandle);
-			window.clearInterval(swipeHandle);
-			window.clearInterval(recolorHandle);
-		}));
+		container.classList.toggle(LCARS_ANIMATED_CLASS, this.animationsEnabled());
 	}
 
 	private playBootSequence(container: HTMLElement): void {
-		if (!this.animationsEnabled() || this.configurationService.getValue<boolean>(ENABLE_BOOT_SETTING) === false) {
+		if (this.configurationService.getValue<boolean>(ENABLE_BOOT_SETTING) === false) {
 			return;
 		}
 
-		const window = getWindow(container);
-		container.classList.add(LCARS_BOOTING_CLASS);
-
-		const veil = append(container, $('.lcars-boot-veil'));
-		append(veil, $('.lcars-boot-title', undefined, localize('lcarsBootTitle', "LCARS-VSC")));
-		append(veil, $('.lcars-boot-subtitle', undefined, localize('lcarsBootSubtitle', "Initializing Interface")));
-		const bar = append(veil, $('.lcars-boot-bar'));
-		for (let i = 0; i < RIBBON_COLORS.length; i++) {
-			append(bar, $(`.lcars-boot-bar-segment.lcars-color-${RIBBON_COLORS[i]}`)).style.animationDelay = `${i * 0.18}s`;
-		}
-
-		const finish = () => {
-			container.classList.remove(LCARS_BOOTING_CLASS);
-			veil.remove();
-		};
-		const handle = window.setTimeout(finish, BOOT_DURATION_MS);
-		this._register(toDisposable(() => {
-			window.clearTimeout(handle);
-			finish();
+		this._register(new LcarsBootScreen(container, () => this.animationsEnabled(), () => {
+			this.layoutService.focusPart(Parts.EDITOR_PART, getWindow(container));
 		}));
+	}
+
+	private updateTitlebar(): void {
+		this.layoutService.mainContainer.classList.toggle('lcars-titlebar-auto-hide', this.configurationService.getValue<boolean>(AUTO_HIDE_TITLEBAR_SETTING) === true);
 	}
 }
 

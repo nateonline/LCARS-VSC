@@ -7,7 +7,7 @@ A fork of [Visual Studio Code - Open Source](https://github.com/microsoft/vscode
 
 ## LCARS Interface
 
-`src/vs/workbench/contrib/lcars` restyles the workbench with block-style activity items, section headers and tabs, condensed uppercase chrome, an animated decorative ribbon above the title bar, and a boot sequence in which the panels power up over about four seconds. Settings: `lcars.animations.enabled` and `lcars.animations.bootSequence`; animations are also disabled when the OS requests reduced motion.
+`src/vs/workbench/contrib/lcars` restyles the workbench with block-style activity items, section headers and tabs, condensed chrome that preserves text casing, and an input-gated boot screen. Before initialization, only a larger dim-gray “Press any button to continue...” prompt appears on black. Any keyboard key (including Tab and modifier keys) while the app is focused, or a click anywhere, starts the animated initialization lasting about four seconds. Escape enters immediately. The prompt is keyboard- and screen-reader-accessible, and its color can be customized with `lcars.startupPromptForeground`. The workbench remains inaccessible behind the screen until initialization finishes. Settings: `lcars.animations.enabled` and `lcars.animations.bootSequence`. With animations disabled or OS reduced motion enabled, input enters immediately without animation. The cached pre-workbench splash uses only the theme background while the boot screen is enabled, rather than painting the status bar's enlarged LCARS bounds as a solid strip.
 
 Planned additions are tracked in [BACKLOG.md](BACKLOG.md).
 
@@ -15,11 +15,15 @@ Planned additions are tracked in [BACKLOG.md](BACKLOG.md).
 
 The Explorer, editor, panel and secondary side bar keep VS Code's normal resizable split layout, framed in the style of the LCARS panels at [mewho.com/titan](https://www.mewho.com/titan/):
 
-1. **Activity bar** — the rail: a column of blocks between rounded top and bottom caps, running to the bottom of the window.
+1. **Activity bar** — the rail: a solid-colored column between rounded top and bottom caps, with black breaks between buttons. The compact menu button uses the same block styling as the navigation buttons.
 2. **Primary side bar** — the column: its title caps an elbow that curves into the editor tabs, and its bottom cap curves into the status bar.
-3. **Editor tabs** — segments of the thin top bar, separated by black breaks. The secondary side bar's title continues the bar, and an empty editor area still shows it.
-4. **Status bar** — the thin bottom bar. Its items start once the lower elbow's curve has levelled out and are separated by black breaks.
+3. **Editor tabs** — segments of the thin top bar, separated by black breaks. An empty editor area still shows it; the secondary side bar has its own separate top band.
+4. **Status bar** — the thin bottom bar. Its items start once the lower elbow's curve has levelled out and are separated by black breaks. Status buttons retain their hover highlights without the animated wipe. A reserved black strip, matching the title bar's height, runs beneath the entire frame, including the activity bar's bottom cap.
 5. **Editor** — the black space the frame encloses, together with the panel and the secondary side bar.
+
+The Windows minimize, maximize and close controls share a compact, 24px-high top-right area with the layout controls and any update/title-bar actions. These controls sit on black without colored button backgrounds; window-control buttons are 32px wide. The command/search control stays centered. Windows defaults to `window.controlsStyle: custom` so these controls can be styled; an explicit `native` setting keeps the OS controls instead. Changing this setting requires a full restart. The **secondary side bar** has a black separation from the editor, rounded left corners, a 48px-wide left rail, and square tabs separated by black breaks in its own top band. Its right edge is square with no rail; the thin bottom band extends flush to the screen edge when the side bar is on the right. The **panel** has a rounded outer top-right corner, a thin top band and the same wide, empty right rail, with no left rail. Both reserve their rail widths, and the secondary side bar also reserves its bottom band, keeping terminal output, chat inputs and resize handles clear.
+
+`lcars.titleBar.autoHide` is on by default: the custom title bar's menu, navigation, command center, layout actions and window controls hide until hovering anywhere over its reserved top strip (including blank spaces) or reaching them with the keyboard (including Alt for the menu). Disable it to keep the title bar visible. Top spacing is retained so revealing the controls never shifts or covers editor content. Native OS controls are outside this behavior.
 
 The activity bar and status bar reserve space for the caps and curves (`LCARS_FRAME_*` in `src/vs/workbench/services/layout/browser/layoutService.ts`), so the frame never covers content or resize handles. `lcarsFrame.ts` measures where the parts are and `media/lcars.css` draws the frame; it follows side bar resizing, a hidden side bar and a side bar on the right. The frame is drawn around the classic layout, so LCARS turns `workbench.experimental.modernUI` off and uses compact editor tabs by default. Setting: `lcars.frame.enabled`. Frame colors and sizes are CSS variables at the top of `lcars.css`.
 

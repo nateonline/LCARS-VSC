@@ -6,11 +6,28 @@
 import assert from 'assert';
 import { URI } from '../../../../base/common/uri.js';
 import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
-import { extractChatSessionToOpen, getMacOSWindowControlsPosition, isValidCopilotCliSessionId, parseExternalAgentsWindowNewSessionLinkUri } from '../../common/window.js';
+import { extractChatSessionToOpen, getMacOSWindowControlsPosition, getWindowControlsStyle, isValidCopilotCliSessionId, parseExternalAgentsWindowNewSessionLinkUri, useWindowControlsOverlay, WindowControlsStyle } from '../../common/window.js';
+import { isMacintosh, isWeb, isWindows } from '../../../../base/common/platform.js';
+import { TestConfigurationService } from '../../../configuration/test/common/testConfigurationService.js';
 
 suite('window', () => {
 
 	ensureNoDisposablesAreLeakedInTestSuite();
+
+	test('defaults to custom Windows controls while honoring explicit control styles', () => {
+		const unsupported = isWeb || isMacintosh;
+		const styles = [undefined, WindowControlsStyle.NATIVE, WindowControlsStyle.CUSTOM, WindowControlsStyle.HIDDEN];
+		const actual = styles.map(controlsStyle => {
+			const configuration = new TestConfigurationService({ window: { titleBarStyle: 'custom', controlsStyle } });
+			return { style: getWindowControlsStyle(configuration), overlay: useWindowControlsOverlay(configuration) };
+		});
+		const defaultStyle = isWindows && !unsupported ? WindowControlsStyle.CUSTOM : WindowControlsStyle.NATIVE;
+		const expected = [defaultStyle, WindowControlsStyle.NATIVE, WindowControlsStyle.CUSTOM, WindowControlsStyle.HIDDEN].map(style => ({
+			style: unsupported ? WindowControlsStyle.NATIVE : style,
+			overlay: !isWeb && (isMacintosh || style === WindowControlsStyle.NATIVE),
+		}));
+		assert.deepStrictEqual(actual, expected);
+	});
 
 	test('preserves legacy macOS traffic-light positioning without a fixed inset', () => {
 		assert.deepStrictEqual({

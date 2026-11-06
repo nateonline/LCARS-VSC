@@ -7,7 +7,7 @@ import { VSBuffer } from '../../../base/common/buffer.js';
 import { IStringDictionary } from '../../../base/common/collections.js';
 import { AGENTS_AUTHORITY } from '../../../base/common/network.js';
 import { PerformanceMark } from '../../../base/common/performance.js';
-import { isMacintosh, isNative, isTahoeOrNewer, isWeb } from '../../../base/common/platform.js';
+import { isMacintosh, isNative, isTahoeOrNewer, isWeb, isWindows } from '../../../base/common/platform.js';
 import { URI, UriComponents, UriDto } from '../../../base/common/uri.js';
 import { ISandboxConfiguration } from '../../../base/parts/sandbox/common/sandboxTypes.js';
 import { IConfigurationService } from '../../configuration/common/configuration.js';
@@ -438,11 +438,11 @@ export function getWindowControlsStyle(configurationService: IConfigurationServi
 
 	const configuration = configurationService.getValue<IWindowSettings | undefined>('window');
 	const style = configuration?.controlsStyle;
-	if (style === WindowControlsStyle.CUSTOM || style === WindowControlsStyle.HIDDEN) {
+	if (style === WindowControlsStyle.CUSTOM || style === WindowControlsStyle.HIDDEN || style === WindowControlsStyle.NATIVE) {
 		return style;
 	}
 
-	return WindowControlsStyle.NATIVE; // default to native on all OS
+	return isWindows ? WindowControlsStyle.CUSTOM : WindowControlsStyle.NATIVE;
 }
 
 export const DEFAULT_CUSTOM_TITLEBAR_HEIGHT = 35; // includes space for command center

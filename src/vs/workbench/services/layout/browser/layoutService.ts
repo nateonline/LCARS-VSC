@@ -73,6 +73,14 @@ export const LCARS_FRAME_CAP_HEIGHT = 35;
  */
 export const LCARS_FRAME_ELBOW_RISE = 13;
 
+/** Space below the LCARS status bar, matching its bottom padding in `lcars.css`. */
+export const LCARS_FRAME_BOTTOM_PADDING = LCARS_FRAME_CAP_HEIGHT;
+
+/** Width reserved for the panel's right rail. */
+export const LCARS_FRAME_PANEL_INSET = 48;
+/** The same rail plus the secondary side bar's black separation; keep the gap in sync with `--lcars-break`. */
+export const LCARS_FRAME_SECONDARY_INSET = LCARS_FRAME_PANEL_INSET + 4;
+
 /**
  * Whether parts reserve space for the LCARS frame: the {@link LayoutSettings.LCARS_FRAME}
  * setting (registered by `src/vs/workbench/contrib/lcars`) is on and the floating panels

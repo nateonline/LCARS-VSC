@@ -17,7 +17,7 @@ import { ActiveAuxiliaryContext, AuxiliaryBarFocusContext } from '../../../commo
 import { ACTIVITY_BAR_BADGE_BACKGROUND, ACTIVITY_BAR_BADGE_FOREGROUND, ACTIVITY_BAR_TOP_ACTIVE_BORDER, ACTIVITY_BAR_TOP_DRAG_AND_DROP_BORDER, ACTIVITY_BAR_TOP_FOREGROUND, ACTIVITY_BAR_TOP_INACTIVE_FOREGROUND, PANEL_ACTIVE_TITLE_BORDER, PANEL_ACTIVE_TITLE_FOREGROUND, PANEL_DRAG_AND_DROP_BORDER, PANEL_INACTIVE_TITLE_FOREGROUND, SIDE_BAR_BACKGROUND, SIDE_BAR_BORDER, SIDE_BAR_TITLE_BORDER, SIDE_BAR_FOREGROUND } from '../../../common/theme.js';
 import { IViewDescriptorService, ViewContainerLocation } from '../../../common/views.js';
 import { IExtensionService } from '../../../services/extensions/common/extensions.js';
-import { ActivityBarPosition, IWorkbenchLayoutService, LayoutSettings, Parts, Position } from '../../../services/layout/browser/layoutService.js';
+import { ActivityBarPosition, IWorkbenchLayoutService, LayoutSettings, Parts, Position, isLcarsFrameEnabled, LCARS_FRAME_SECONDARY_INSET } from '../../../services/layout/browser/layoutService.js';
 import { HoverPosition } from '../../../../base/browser/ui/hover/hoverWidget.js';
 import { IAction, Separator, SubmenuAction, toAction } from '../../../../base/common/actions.js';
 import { ToggleAuxiliaryBarAction } from './auxiliaryBarActions.js';
@@ -51,7 +51,7 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 	static readonly viewContainersWorkspaceStateKey = 'workbench.auxiliarybar.viewContainersWorkspaceState';
 
 	// Use the side bar dimensions
-	override readonly minimumWidth: number = 170;
+	override get minimumWidth(): number { return 170 + (isLcarsFrameEnabled(this.layoutService, this.configurationService) ? LCARS_FRAME_SECONDARY_INSET : 0); }
 	override readonly maximumWidth: number = Number.POSITIVE_INFINITY;
 	override readonly minimumHeight: number = 0;
 	override readonly maximumHeight: number = Number.POSITIVE_INFINITY;
@@ -74,7 +74,7 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 			return undefined;
 		}
 
-		return Math.max(width, 300);
+		return Math.max(width, 300) + (isLcarsFrameEnabled(this.layoutService, this.configurationService) ? LCARS_FRAME_SECONDARY_INSET : 0);
 	}
 
 	readonly priority = LayoutPriority.Low;
@@ -103,7 +103,7 @@ export class AuxiliaryBarPart extends AbstractPaneCompositePart {
 			{
 				hasTitle: true,
 				trailingSeparator: true,
-				borderWidth: () => (this.getColor(SIDE_BAR_BORDER) || this.getColor(contrastBorder)) ? 1 : 0,
+				borderWidth: () => isLcarsFrameEnabled(this.layoutService, this.configurationService) ? 0 : (this.getColor(SIDE_BAR_BORDER) || this.getColor(contrastBorder)) ? 1 : 0,
 			},
 			AuxiliaryBarPart.activeViewSettingsKey,
 			ActiveAuxiliaryContext.bindTo(contextKeyService),

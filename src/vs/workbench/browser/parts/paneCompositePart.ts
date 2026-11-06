@@ -12,7 +12,7 @@ import { IPaneComposite } from '../../common/panecomposite.js';
 import { IViewDescriptorService, ViewContainerLocation } from '../../common/views.js';
 import { DisposableStore, IDisposable, MutableDisposable } from '../../../base/common/lifecycle.js';
 import { IView } from '../../../base/browser/ui/grid/grid.js';
-import { IWorkbenchLayoutService, Parts, SINGLE_WINDOW_PARTS, getFloatingOuterGutterEdges, getFloatingPaneCompositeHorizontalMargins, getFloatingPaneCompositeVerticalMargins, getFloatingPaneCompositeVerticalOuterEdges } from '../../services/layout/browser/layoutService.js';
+import { IWorkbenchLayoutService, Parts, SINGLE_WINDOW_PARTS, getFloatingOuterGutterEdges, getFloatingPaneCompositeHorizontalMargins, getFloatingPaneCompositeVerticalMargins, getFloatingPaneCompositeVerticalOuterEdges, isLcarsFrameEnabled, LCARS_FRAME_SECONDARY_INSET, LCARS_FRAME_PANEL_INSET, LCARS_FRAME_CAP_HEIGHT } from '../../services/layout/browser/layoutService.js';
 import { CompositePart, ICompositePartOptions, ICompositeTitleLabel } from './compositePart.js';
 import { IPaneCompositeBarOptions, PaneCompositeBar } from './paneCompositeBar.js';
 import { Dimension, EventHelper, trackFocus, $, addDisposableListener, EventType, prepend, getWindow, scheduleAtNextAnimationFrame, computeScreenAwareSize } from '../../../base/browser/dom.js';
@@ -609,14 +609,23 @@ export abstract class AbstractPaneCompositePart extends CompositePart<PaneCompos
 		// When the floating panels experiment is enabled, shrink the content to
 		// leave room for the card margin and border applied via CSS on the part.
 		const floatingInset = this.getFloatingInset();
-		this.element.style.height = this.layoutService.isFloatingPanelsEnabled()
-			? `calc(100% - ${floatingInset.verticalMargin}px)`
-			: '';
 		if (floatingInset.width > 0 || floatingInset.height > 0) {
 			width = Math.max(0, width - floatingInset.width);
 			height = Math.max(0, height - floatingInset.height);
 		}
 
+		const lcarsFrame = isLcarsFrameEnabled(this.layoutService, this.configurationService);
+		const lcarsLeftInset = lcarsFrame && this.partId === Parts.AUXILIARYBAR_PART ? LCARS_FRAME_SECONDARY_INSET : 0;
+		const lcarsRightInset = lcarsFrame && this.partId === Parts.PANEL_PART ? LCARS_FRAME_PANEL_INSET : 0;
+		const lcarsBottomInset = lcarsFrame && this.partId === Parts.AUXILIARYBAR_PART ? LCARS_FRAME_CAP_HEIGHT : 0;
+		this.element.style.height = this.layoutService.isFloatingPanelsEnabled()
+			? `calc(100% - ${floatingInset.verticalMargin}px)`
+			: lcarsBottomInset > 0 ? '100%' : '';
+		this.element.style.setProperty('--lcars-content-left', `${lcarsLeftInset}px`);
+		this.element.style.setProperty('--lcars-content-right', `${lcarsRightInset}px`);
+		this.element.style.setProperty('--lcars-content-bottom', `${lcarsBottomInset}px`);
+		width = Math.max(0, width - lcarsLeftInset - lcarsRightInset);
+		height = Math.max(0, height - lcarsBottomInset);
 		this.contentDimension = new Dimension(width, height);
 
 		// Reflect which cluster edges this part is the outermost floating card on so the

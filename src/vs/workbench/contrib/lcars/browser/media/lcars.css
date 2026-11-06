@@ -48,11 +48,12 @@
 	--lcars-elbow-inner: 13px; /* cap minus bar; keep in sync with LCARS_FRAME_ELBOW_RISE */
 	--lcars-elbow-outer: 32px;
 	--lcars-rail-radius: 24px;
+	--lcars-bottom-padding: var(--lcars-cap);
 
 	background-color: var(--lcars-black);
 }
 
-/* Colour utility classes used by the generated ribbon and boot elements */
+/* Colour utility classes used by the boot elements */
 .lcars .lcars-color-orange { background-color: var(--lcars-orange); }
 .lcars .lcars-color-peach { background-color: var(--lcars-peach); }
 .lcars .lcars-color-lavender { background-color: var(--lcars-lavender); }
@@ -62,63 +63,20 @@
 .lcars .lcars-color-purple { background-color: var(--lcars-purple); }
 .lcars .lcars-color-red { background-color: var(--lcars-red); }
 
-/* ---------- Typography: condensed, uppercase chrome. Editor text is untouched. ---------- */
+/* ---------- Typography: condensed chrome, preserving source casing. ---------- */
 
 body .monaco-workbench.lcars {
 	font-family: var(--lcars-font);
 	letter-spacing: 0.04em;
 }
 
-.lcars .part.activitybar,
-.lcars .part.sidebar > .title,
-.lcars .monaco-pane-view .pane-header,
-.lcars .part.panel > .composite.title,
-.lcars .part.auxiliarybar > .composite.title,
-.lcars .part.editor .tabs-container > .tab,
-.lcars .part.statusbar,
-.lcars .part.titlebar .menubar,
-.lcars .monaco-button {
-	text-transform: uppercase;
-}
-
-/* ---------- Ribbons: rows of colored pills that resize, swipe and change color ---------- */
-
-.lcars .lcars-ribbon {
-	position: fixed;
-	left: 0;
-	right: 0;
-	display: flex;
-	gap: 4px;
-	padding: 0 6px;
-	pointer-events: none;
-	z-index: 2400;
-}
-
-.lcars .lcars-ribbon-top {
-	top: 0;
-	height: 4px;
-}
-
-.lcars .lcars-ribbon-segment {
-	flex: 1 1 0;
-	min-width: 12px;
-	border-radius: var(--lcars-cap-radius);
-}
-
-.lcars.lcars-animated .lcars-ribbon-segment {
-	transition: flex-grow 1.6s cubic-bezier(0.65, 0, 0.35, 1), background-color 0.8s ease;
-}
-
-.lcars.lcars-animated .lcars-ribbon-segment.lcars-swiping {
-	animation: lcars-swipe-off-on 1.4s cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-/* Swipe off through the right edge, then back on from the left edge */
-@keyframes lcars-swipe-off-on {
-	0% { clip-path: inset(0 0 0 0); }
-	45% { clip-path: inset(0 0 0 100%); }
-	55% { clip-path: inset(0 100% 0 0); }
-	100% { clip-path: inset(0 0 0 0); }
+.monaco-workbench.lcars .part.sidebar > .title > .title-label h2,
+.monaco-workbench.lcars .part.auxiliarybar > .title > .title-label h2,
+.monaco-workbench.lcars .pane-composite-part > .title > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item,
+.monaco-workbench.lcars .pane-composite-part > .header-or-footer > .composite-bar-container > .composite-bar > .monaco-action-bar .action-item,
+.monaco-workbench.lcars .monaco-pane-view .pane > .pane-header > .title,
+.monaco-workbench.lcars > .notifications-center > .notifications-center-header > .notifications-center-header-title {
+	text-transform: none;
 }
 
 /* ---------- Boot sequence ---------- */
@@ -126,31 +84,31 @@ body .monaco-workbench.lcars {
 .lcars .lcars-boot-veil {
 	position: fixed;
 	inset: 0;
-	z-index: 2600;
+	z-index: 11000; /* Above first-run onboarding as well as window chrome. */
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 14px;
+	gap: 16px;
 	background: var(--lcars-black);
 	color: var(--lcars-orange);
-	text-transform: uppercase;
-	pointer-events: none;
-	animation: lcars-boot-veil 4.2s ease-in forwards;
+	pointer-events: auto;
 }
 
 .lcars .lcars-boot-title {
-	font-size: 56px;
+	font-size: clamp(26px, 5vw, 56px);
+	line-height: 1.4;
+	padding-block: 4px;
 	letter-spacing: 0.3em;
 	padding-left: 0.3em;
-	animation: lcars-boot-text 1.6s ease-out both;
 }
 
 .lcars .lcars-boot-subtitle {
-	font-size: 18px;
+	font-size: var(--vscode-fontSize-heading2);
+	line-height: 1.4;
+	padding-block: 4px;
 	letter-spacing: 0.4em;
 	color: var(--lcars-lavender);
-	animation: lcars-boot-text 1.6s 0.5s ease-out both, lcars-blink 1s 1.5s steps(2, start) infinite;
 }
 
 .lcars .lcars-boot-bar {
@@ -158,13 +116,46 @@ body .monaco-workbench.lcars {
 	gap: 6px;
 	width: min(560px, 70vw);
 	height: 14px;
-	margin-top: 18px;
+	margin-top: var(--vscode-spacing-size200);
 }
 
 .lcars .lcars-boot-bar-segment {
 	flex: 1;
 	border-radius: var(--lcars-cap-radius);
+	opacity: 0.35;
+}
+
+.lcars .lcars-boot-prompt.monaco-button {
+	width: auto;
+	background: transparent;
+	border: 0;
+	color: var(--vscode-lcars-startupPromptForeground);
+	font-family: sans-serif;
+	font-size: var(--vscode-fontSize-heading2);
+	font-weight: var(--vscode-fontWeight-regular);
+	letter-spacing: 0.04em;
+	text-transform: none;
+}
+
+.lcars .lcars-boot-initializing {
+	animation: lcars-boot-veil 4.2s ease-in forwards;
+}
+
+.lcars .lcars-boot-initializing .lcars-boot-title {
+	animation: lcars-boot-text 1.6s ease-out both;
+}
+
+.lcars .lcars-boot-initializing .lcars-boot-subtitle {
+	animation: lcars-boot-text 1.6s 0.5s ease-out both, lcars-blink 1s 1.5s steps(2, start) infinite;
+}
+
+.lcars .lcars-boot-initializing .lcars-boot-bar-segment {
+	opacity: 1;
 	animation: lcars-wipe-in 0.9s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+.lcars .lcars-boot-initializing .lcars-boot-prompt {
+	opacity: 0;
 }
 
 @keyframes lcars-boot-veil {
@@ -207,8 +198,8 @@ body .monaco-workbench.lcars {
 
 /* ---------- Title bar: window chrome above the frame ---------- */
 
-.lcars .part.titlebar {
-	padding-top: 4px;
+.monaco-workbench.lcars .part.titlebar .window-appicon {
+	display: none;
 }
 
 .lcars .part.titlebar .command-center .action-item.command-center-center {
@@ -216,11 +207,106 @@ body .monaco-workbench.lcars {
 	border: 2px solid var(--lcars-purple);
 }
 
+.monaco-workbench.lcars .part.titlebar > .titlebar-container.has-center > .titlebar-left,
+.monaco-workbench.lcars .part.titlebar > .titlebar-container.has-center > .titlebar-right {
+	min-width: 0;
+}
+
+.monaco-workbench.lcars.windows .part.titlebar > .titlebar-container > .titlebar-right {
+	height: calc(24px / var(--zoom-factor, 1));
+	align-self: flex-start;
+	background-color: var(--lcars-black);
+}
+
+.monaco-workbench.lcars .part.titlebar .titlebar-right .monaco-action-bar .update-indicator,
+.monaco-workbench.lcars .part.titlebar .titlebar-right .monaco-action-bar .update-indicator:hover {
+	background-color: transparent;
+	border-color: transparent;
+	color: var(--vscode-titleBar-activeForeground);
+}
+
+.monaco-workbench.lcars.windows .part.titlebar > .titlebar-container.counter-zoom > .titlebar-right {
+	height: 24px;
+}
+
+.monaco-workbench.lcars.windows .part.titlebar .titlebar-right > .window-controls-container:not(.wco-enabled) {
+	width: calc(96px / var(--zoom-factor, 1));
+}
+
+.monaco-workbench.lcars.windows .part.titlebar .titlebar-container.counter-zoom .titlebar-right > .window-controls-container:not(.wco-enabled) {
+	width: 96px;
+}
+
+.monaco-workbench.lcars.windows .part.titlebar > .titlebar-container > .titlebar-right > .action-toolbar-container,
+.monaco-workbench.lcars.windows .part.titlebar > .titlebar-container > .titlebar-right > .update-toolbar-container,
+.monaco-workbench.lcars.windows .part.titlebar > .titlebar-container > .titlebar-right > .center-adjacent-toolbar-container {
+	height: 100%;
+	margin: 0;
+	padding: 0 4px;
+}
+
+.monaco-workbench.lcars.windows .part.titlebar .titlebar-right > .action-toolbar-container .action-item {
+	border-right: var(--lcars-break) solid var(--lcars-black);
+}
+
+.monaco-workbench.lcars.windows .part.titlebar .titlebar-right > .window-controls-container > .window-icon {
+	box-sizing: border-box;
+	width: 32px;
+	background-color: transparent;
+}
+
+.monaco-workbench.lcars.windows .part.titlebar .titlebar-right > .window-controls-container > .window-icon {
+	border-left: var(--lcars-break) solid var(--lcars-black);
+}
+
+.monaco-workbench.lcars.windows .part.titlebar .titlebar-right > .window-controls-container > .window-icon:hover {
+	background-color: transparent;
+}
+
+.monaco-workbench.lcars.windows .part.titlebar .titlebar-right > .window-controls-container > .window-close:hover {
+	background-color: transparent;
+}
+
+.monaco-workbench.lcars.windows .part.titlebar .window-controls-container > .window-icon:focus-visible {
+	outline: var(--vscode-strokeThickness) solid var(--vscode-focusBorder);
+	outline-offset: -2px;
+}
+
+.monaco-workbench.lcars-titlebar-auto-hide .part.titlebar > .titlebar-container {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.monaco-workbench.lcars-titlebar-auto-hide .part.titlebar > .titlebar-container > .titlebar-drag-region {
+	-webkit-app-region: no-drag;
+}
+
+.monaco-workbench.lcars-titlebar-auto-hide .part.titlebar:hover > .titlebar-container,
+.monaco-workbench.lcars-titlebar-auto-hide .part.titlebar:focus-within > .titlebar-container,
+.monaco-workbench.lcars-titlebar-auto-hide .part.titlebar.menubar-focused > .titlebar-container,
+.monaco-workbench.lcars-titlebar-auto-hide.lcars-titlebar-menu-open .part.titlebar > .titlebar-container {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.monaco-workbench.lcars-titlebar-auto-hide .part.titlebar:hover > .titlebar-container > .titlebar-drag-region {
+	-webkit-app-region: drag;
+}
+
 /* ---------- Area 1 - Activity bar: the rail, a column of blocks between two caps ---------- */
 
 /* The part reserves the cap height above its items (`LCARS_FRAME_CAP_HEIGHT`) */
 .lcars-frame .part.activitybar > .content {
 	margin-top: var(--lcars-cap);
+}
+
+.lcars .part.activitybar > .content {
+	background: linear-gradient(var(--lcars-frame-rail), var(--lcars-frame-rail)) no-repeat;
+	background-size: calc(100% - var(--lcars-gap)) 100%;
+}
+
+.lcars .part.activitybar.right > .content {
+	background-position: right top;
 }
 
 /* Top cap, in line with the side bar title. The bottom cap is drawn in the status bar. */
@@ -245,15 +331,35 @@ body .monaco-workbench.lcars {
 }
 
 /* Each item is a block; the black gap toward the side bar separates the rail from the column */
+.lcars .part.activitybar > .content :not(.monaco-menu) > .monaco-action-bar .action-item,
+.lcars .part.activitybar > .content > .menubar {
+	background-color: var(--lcars-black);
+}
+
+.monaco-workbench.lcars .part.activitybar > .content > .menubar.compact {
+	height: var(--activity-bar-action-height, 48px);
+}
+
+.monaco-workbench.lcars .part.activitybar > .content > .menubar.compact .toolbar-toggle-more,
 .lcars .part.activitybar > .content :not(.monaco-menu) > .monaco-action-bar .action-label {
 	width: calc(var(--activity-bar-width, 48px) - var(--lcars-gap));
-	height: calc(var(--activity-bar-action-height, 48px) - var(--lcars-break));
-	margin-bottom: var(--lcars-break);
+	height: var(--activity-bar-action-height, 48px);
+	box-sizing: border-box;
+	border-bottom: var(--lcars-break) solid var(--lcars-black);
+	margin-bottom: 0;
 	border-radius: 0;
 	background-color: var(--lcars-frame);
 	transition: background-color 0.2s ease-out;
 }
 
+.monaco-workbench.lcars .part.activitybar > .content > .menubar.compact .toolbar-toggle-more {
+	box-sizing: border-box;
+	padding: 0;
+	font-size: var(--activity-bar-icon-size, 24px);
+	color: var(--vscode-activityBar-inactiveForeground);
+}
+
+.monaco-workbench.lcars .part.activitybar.right > .content > .menubar.compact .toolbar-toggle-more,
 .lcars .part.activitybar.right > .content :not(.monaco-menu) > .monaco-action-bar .action-label {
 	margin-left: var(--lcars-gap);
 }
@@ -266,10 +372,12 @@ body .monaco-workbench.lcars {
 	background-color: var(--lcars-frame-dark);
 }
 
+.monaco-workbench.lcars .part.activitybar > .content > .menubar.compact .menubar-menu-button:hover .toolbar-toggle-more,
 .lcars .part.activitybar > .content :not(.monaco-menu) > .monaco-action-bar .action-item:hover .action-label {
 	background-color: var(--lcars-frame-light);
 }
 
+.monaco-workbench.lcars .part.activitybar > .content > .menubar.compact .menubar-menu-button.open .toolbar-toggle-more,
 .lcars .part.activitybar > .content :not(.monaco-menu) > .monaco-action-bar .action-item.checked .action-label {
 	background-color: var(--lcars-orange);
 }
@@ -371,43 +479,126 @@ body .monaco-workbench.lcars {
 	padding-left: var(--lcars-elbow-inner);
 }
 
-/* ---------- Panel and secondary side bar titles ---------- */
+/* ---------- Panel and secondary side bar: framed content and square tab segments ---------- */
 
-.lcars .part.panel > .composite.title .composite-bar .action-item .action-label {
-	padding: 2px 14px;
-	color: var(--lcars-black);
-	background: var(--lcars-lavender);
+.monaco-workbench.lcars-frame .part.panel,
+.monaco-workbench.lcars-frame .part.auxiliarybar {
+	border-width: 0;
 }
 
-.lcars .part.panel > .composite.title .composite-bar .action-item.checked .action-label {
-	background: var(--lcars-orange);
+.monaco-workbench.lcars-frame .part.panel {
+	border-top-right-radius: var(--lcars-rail-radius);
+	clip-path: inset(0 round 0 var(--lcars-rail-radius) 0 0);
 }
 
-/* The secondary side bar's title continues the thin top bar across the window */
-.lcars-frame .part.auxiliarybar > .composite.title {
+.monaco-workbench.lcars-frame .part.auxiliarybar {
+	clip-path: inset(0 0 0 var(--lcars-break) round var(--lcars-rail-radius) 0 0 var(--lcars-rail-radius));
+}
+
+.lcars-frame .part.panel > .content,
+.lcars-frame .part.auxiliarybar > .content {
+	margin-left: var(--lcars-content-left);
+	margin-right: var(--lcars-content-right);
+}
+
+.monaco-workbench.lcars-frame .part.panel > .composite.title,
+.monaco-workbench.lcars-frame .part.auxiliarybar > .composite.title {
+	box-sizing: border-box;
+	border-top-width: 0;
 	align-items: flex-start;
 	background: linear-gradient(var(--lcars-frame), var(--lcars-frame)) no-repeat;
-	background-size: calc(100% - var(--lcars-break)) var(--lcars-bar);
+	background-size: 100% var(--lcars-bar);
+	padding-left: calc(var(--lcars-content-left) + var(--lcars-break));
+	padding-right: calc(var(--lcars-content-right) + var(--lcars-break));
 }
 
-.lcars-frame .part.auxiliarybar.right > .composite.title {
+.monaco-workbench.lcars-frame .part.auxiliarybar > .composite.title {
+	background-size: calc(100% - var(--lcars-break)) var(--lcars-bar);
 	background-position: right top;
 }
 
-.lcars-frame .part.auxiliarybar.left > .composite.title {
-	background-position: left top;
+.lcars-frame .part.auxiliarybar::before,
+.lcars-frame .part.auxiliarybar::after,
+.lcars-frame .part.panel::after {
+	content: '';
+	position: absolute;
+	top: var(--lcars-bar);
+	bottom: 0;
+	background-color: var(--lcars-frame);
+	pointer-events: none;
 }
 
+.lcars-frame .part.auxiliarybar::before {
+	left: var(--lcars-break);
+	width: calc(var(--lcars-content-left) - var(--lcars-break));
+}
+
+.lcars-frame .part.auxiliarybar::after {
+	top: auto;
+	left: var(--lcars-break);
+	right: 0;
+	height: calc(var(--lcars-content-bottom) - var(--lcars-elbow-inner));
+}
+
+.lcars-frame .part.panel::after {
+	right: 0;
+	width: var(--lcars-content-right);
+}
+
+.lcars-frame .part.panel::before {
+	content: '';
+	position: absolute;
+	top: var(--lcars-bar);
+	right: var(--lcars-content-right);
+	width: var(--lcars-elbow-inner);
+	height: var(--lcars-elbow-inner);
+	background: radial-gradient(circle at 0 100%, transparent calc(var(--lcars-elbow-inner) - 0.5px), var(--lcars-frame) var(--lcars-elbow-inner));
+	pointer-events: none;
+}
+
+.lcars-frame .part.panel > .composite.title > *,
+.lcars-frame .part.panel > .composite.title .composite-bar,
+.lcars-frame .part.panel > .composite.title .monaco-action-bar,
+.lcars-frame .part.panel > .composite.title .actions-container,
 .lcars-frame .part.auxiliarybar > .composite.title > *,
 .lcars-frame .part.auxiliarybar > .composite.title .composite-bar,
 .lcars-frame .part.auxiliarybar > .composite.title .monaco-action-bar,
-.lcars-frame .part.auxiliarybar > .composite.title .actions-container,
-.lcars-frame .part.auxiliarybar > .composite.title .composite-bar .action-item {
+.lcars-frame .part.auxiliarybar > .composite.title .actions-container {
 	height: var(--lcars-bar);
 }
 
+.monaco-workbench.lcars-frame .part.panel > .composite.title .composite-bar .action-item,
+.monaco-workbench.lcars-frame .part.auxiliarybar > .composite.title .composite-bar .action-item {
+	box-sizing: border-box;
+	height: var(--lcars-bar);
+	padding-top: 0;
+	padding-bottom: 0;
+	background-color: var(--lcars-frame-rail);
+	box-shadow: inset calc(-1 * var(--lcars-break)) 0 0 var(--lcars-black);
+	border-radius: 0;
+}
+
+.lcars-frame .part.panel > .composite.title .composite-bar .action-item.checked,
+.lcars-frame .part.auxiliarybar > .composite.title .composite-bar .action-item.checked {
+	box-shadow: inset calc(-1 * var(--lcars-break)) 0 0 var(--lcars-black), inset 0 -3px 0 var(--lcars-orange);
+}
+
+.lcars-frame .part.panel > .composite.title .composite-bar .action-item:hover,
+.lcars-frame .part.auxiliarybar > .composite.title .composite-bar .action-item:hover {
+	background-color: var(--lcars-frame-light);
+}
+
+.lcars-frame .part.panel > .composite.title .composite-bar .action-item .action-label,
 .lcars-frame .part.auxiliarybar > .composite.title .composite-bar .action-item .action-label {
 	line-height: var(--lcars-bar);
+	border-radius: 0;
+	background-color: transparent;
+}
+
+.lcars-frame .part.panel > .composite.title .composite-bar .action-item:focus-visible .action-label,
+.lcars-frame .part.auxiliarybar > .composite.title .composite-bar .action-item:focus-visible .action-label {
+	outline: var(--vscode-strokeThickness) solid var(--vscode-focusBorder);
+	outline-offset: -2px;
 }
 
 /* ---------- Area 4 - Status bar: the thin bottom bar and the lower elbow ---------- */
@@ -422,6 +613,7 @@ body .monaco-workbench.lcars {
 	position: relative;
 	height: 100%;
 	padding-top: var(--lcars-elbow-inner);
+	padding-bottom: var(--lcars-bottom-padding);
 	padding-left: var(--lcars-bar-start, 0);
 	background-clip: content-box;
 }
@@ -449,7 +641,7 @@ body .monaco-workbench.lcars {
 	content: '';
 	position: absolute;
 	top: 0;
-	bottom: 0;
+	bottom: var(--lcars-bottom-padding);
 	left: var(--lcars-rail-offset);
 	width: calc(var(--lcars-rail-width) - var(--lcars-gap));
 	background-color: var(--lcars-frame-rail);
@@ -469,7 +661,7 @@ body .monaco-workbench.lcars {
 	content: '';
 	position: absolute;
 	top: 0;
-	bottom: 0;
+	bottom: var(--lcars-bottom-padding);
 	left: var(--lcars-column-offset);
 	width: calc(var(--lcars-column-width) + var(--lcars-elbow-inner));
 	background-color: inherit;
@@ -512,10 +704,6 @@ body .monaco-workbench.lcars {
 	margin-left: 0;
 	margin-right: 0;
 	padding: 0 8px;
-}
-
-.lcars.lcars-animated .part.statusbar .statusbar-item:hover > .statusbar-item-label {
-	animation: lcars-wipe-in 0.35s ease-out;
 }
 
 /* ---------- Controls ---------- */

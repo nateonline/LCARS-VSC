@@ -8,7 +8,7 @@ import { localize } from '../../../../nls.js';
 import { IAction, Separator, SubmenuAction, toAction } from '../../../../base/common/actions.js';
 import { ActionsOrientation } from '../../../../base/browser/ui/actionbar/actionbar.js';
 import { ActivePanelContext, PanelFocusContext } from '../../../common/contextkeys.js';
-import { IWorkbenchLayoutService, Parts, Position } from '../../../services/layout/browser/layoutService.js';
+import { IWorkbenchLayoutService, Parts, Position, isLcarsFrameEnabled, LCARS_FRAME_PANEL_INSET } from '../../../services/layout/browser/layoutService.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { IContextMenuService } from '../../../../platform/contextview/browser/contextView.js';
 import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
@@ -37,7 +37,7 @@ export class PanelPart extends AbstractPaneCompositePart {
 
 	//#region IView
 
-	readonly minimumWidth: number = 300;
+	get minimumWidth(): number { return 300 + (isLcarsFrameEnabled(this.layoutService, this.configurationService) ? LCARS_FRAME_PANEL_INSET : 0); }
 	readonly maximumWidth: number = Number.POSITIVE_INFINITY;
 	readonly minimumHeight: number = 77;
 	readonly maximumHeight: number = Number.POSITIVE_INFINITY;
@@ -60,7 +60,7 @@ export class PanelPart extends AbstractPaneCompositePart {
 			return undefined;
 		}
 
-		return Math.max(width, 300);
+		return Math.max(width, 300) + (isLcarsFrameEnabled(this.layoutService, this.configurationService) ? LCARS_FRAME_PANEL_INSET : 0);
 	}
 
 	//#endregion
@@ -195,7 +195,7 @@ export class PanelPart extends AbstractPaneCompositePart {
 
 	override layout(width: number, height: number, top: number, left: number): void {
 		let dimensions = new Dimension(width, height);
-		if (!this.layoutService.isFloatingPanelsEnabled()) {
+		if (!this.layoutService.isFloatingPanelsEnabled() && !isLcarsFrameEnabled(this.layoutService, this.configurationService)) {
 			switch (this.layoutService.getPanelPosition()) {
 				case Position.RIGHT:
 					dimensions = new Dimension(width - 1, height); // Take into account the 1px border when layouting

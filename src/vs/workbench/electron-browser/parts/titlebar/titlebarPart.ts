@@ -29,6 +29,7 @@ import { IEditorService } from '../../../services/editor/common/editorService.js
 import { IKeybindingService } from '../../../../platform/keybinding/common/keybinding.js';
 import { CodeWindow, mainWindow } from '../../../../base/browser/window.js';
 import { IsWindowAlwaysOnTopContext } from '../../../common/contextkeys.js';
+import { localize } from '../../../../nls.js';
 
 export class NativeTitlebarPart extends BrowserTitlebarPart {
 
@@ -182,13 +183,13 @@ export class NativeTitlebarPart extends BrowserTitlebarPart {
 		) {
 
 			// Minimize
-			const minimizeIcon = append(this.windowControlsContainer, $('div.window-icon.window-minimize' + ThemeIcon.asCSSSelector(Codicon.chromeMinimize)));
+			const minimizeIcon = append(this.windowControlsContainer, $('div.window-icon.window-minimize' + ThemeIcon.asCSSSelector(Codicon.chromeMinimize), { role: 'button', tabindex: '0', 'aria-label': localize('minimizeWindow', "Minimize Window") }));
 			this._register(addDisposableListener(minimizeIcon, EventType.CLICK, () => {
 				this.nativeHostService.minimizeWindow({ targetWindowId });
 			}));
 
 			// Restore
-			this.maxRestoreControl = append(this.windowControlsContainer, $('div.window-icon.window-max-restore'));
+			this.maxRestoreControl = append(this.windowControlsContainer, $('div.window-icon.window-max-restore', { role: 'button', tabindex: '0', 'aria-label': localize('maximizeWindow', "Maximize Window") }));
 			this._register(addDisposableListener(this.maxRestoreControl, EventType.CLICK, async () => {
 				const maximized = await this.nativeHostService.isMaximized({ targetWindowId });
 				if (maximized) {
@@ -199,10 +200,19 @@ export class NativeTitlebarPart extends BrowserTitlebarPart {
 			}));
 
 			// Close
-			const closeIcon = append(this.windowControlsContainer, $('div.window-icon.window-close' + ThemeIcon.asCSSSelector(Codicon.chromeClose)));
+			const closeIcon = append(this.windowControlsContainer, $('div.window-icon.window-close' + ThemeIcon.asCSSSelector(Codicon.chromeClose), { role: 'button', tabindex: '0', 'aria-label': localize('closeWindow', "Close Window") }));
 			this._register(addDisposableListener(closeIcon, EventType.CLICK, () => {
 				this.nativeHostService.closeWindow({ targetWindowId });
 			}));
+
+			for (const control of [minimizeIcon, this.maxRestoreControl, closeIcon]) {
+				this._register(addDisposableListener(control, EventType.KEY_DOWN, event => {
+					if (event.key === 'Enter' || event.key === ' ') {
+						event.preventDefault();
+						control.click();
+					}
+				}));
+			}
 
 			// Resizer
 			this.resizer = append(this.rootContainer, $('div.resizer'));
@@ -232,9 +242,11 @@ export class NativeTitlebarPart extends BrowserTitlebarPart {
 	private onDidChangeWindowMaximized(maximized: boolean): void {
 		if (this.maxRestoreControl) {
 			if (maximized) {
+				this.maxRestoreControl.setAttribute('aria-label', localize('restoreWindow', "Restore Window"));
 				this.maxRestoreControl.classList.remove(...ThemeIcon.asClassNameArray(Codicon.chromeMaximize));
 				this.maxRestoreControl.classList.add(...ThemeIcon.asClassNameArray(Codicon.chromeRestore));
 			} else {
+				this.maxRestoreControl.setAttribute('aria-label', localize('maximizeWindow', "Maximize Window"));
 				this.maxRestoreControl.classList.remove(...ThemeIcon.asClassNameArray(Codicon.chromeRestore));
 				this.maxRestoreControl.classList.add(...ThemeIcon.asClassNameArray(Codicon.chromeMaximize));
 			}
