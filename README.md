@@ -7,13 +7,13 @@ A fork of [Visual Studio Code - Open Source](https://github.com/microsoft/vscode
 
 ## LCARS Interface
 
-`src/vs/workbench/contrib/lcars` restyles the whole workbench: colored pill-ended tabs, section bars and activity-bar blocks, elbow-capped panels, condensed uppercase chrome, animated ribbons whose segments resize, swipe on/off and change color, a stardate readout in the status bar, and a boot sequence in which the panels power up over about four seconds. Settings: `lcars.animations.enabled` and `lcars.animations.bootSequence`; animations are also disabled when the OS requests reduced motion.
+`src/vs/workbench/contrib/lcars` restyles the workbench with colored pill-ended tabs, section headers and activity-bar blocks, condensed uppercase chrome, animated decorative ribbons, a stardate readout in the status bar, and a boot sequence in which the panels power up over about four seconds. Settings: `lcars.animations.enabled` and `lcars.animations.bootSequence`; animations are also disabled when the OS requests reduced motion.
 
-### Full-window views
+### Split-pane layout and section frames
 
-The side bar, editor, panel and chat are shown one at a time instead of side by side. The side bar is a full-window hub in which every entry is one pill: the Explorer lists a pill per file and folder, and Source Control lists a pill per changed file, colored by change kind (modified, added, deleted, renamed). Opening a pill swaps to the editor (or diff) with a swipe animation, and the **Back** pill at the left of the status bar (or `Alt+Home`, command *Toggle Editor and Hub View*) returns to the hub. Showing the panel or chat takes the whole window too. Set `lcars.views.enabled` to `false` and reload to restore the classic layout. This is built on a new "maximized side bar" layout state (`IWorkbenchLayoutService.setSideBarMaximized`).
+The Explorer, editor, panel and secondary side bar use VS Code's normal resizable split layout. Opening a file or showing another section no longer hides the other sections. The full-window hub, Back/Editor status-bar switcher, `Alt+Home` hub shortcut, view-swipe transitions, and `lcars.views.enabled` setting have been removed. Normal user-controlled panel and secondary-side-bar maximization remain available.
 
-> Note: this was authored without being able to build or launch Electron; the CSS selectors and layout interplay are untested at runtime.
+The next visual direction uses thin horizontal bars and wider vertical bars to separate sections, with independently selected edges rather than a four-sided frame on every section. Bars may eventually contain labels, controls or data. Exact edge placement, sizing and content are pending mockups; no new frames or data slots are imposed yet. Existing overlay strips and forced section corners have been removed so future frames can reserve real layout space instead of covering content or resize handles.
 
 ## Building and Running
 

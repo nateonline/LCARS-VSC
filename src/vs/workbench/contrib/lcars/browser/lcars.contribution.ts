@@ -36,19 +36,13 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 			type: 'boolean',
 			default: true,
 			scope: ConfigurationScope.APPLICATION,
-			description: localize('lcars.animations.enabled', "Controls whether the LCARS interface animates its panels, ribbons and swipe transitions."),
+			description: localize('lcars.animations.enabled', "Controls whether the LCARS interface animates its panels and decorative ribbons."),
 		},
 		[ENABLE_BOOT_SETTING]: {
 			type: 'boolean',
 			default: true,
 			scope: ConfigurationScope.APPLICATION,
 			description: localize('lcars.animations.bootSequence', "Controls whether the panels power up one after another when the window opens."),
-		},
-		'lcars.views.enabled': {
-			type: 'boolean',
-			default: true,
-			scope: ConfigurationScope.APPLICATION,
-			description: localize('lcars.views.enabled', "Controls whether the side bar, editor, panel and chat show as separate full-window views with one pill per entry. Takes effect after a reload."),
 		}
 	}
 });

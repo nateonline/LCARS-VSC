@@ -339,7 +339,6 @@ export abstract class Workbench extends Disposable implements IAgentWorkbenchLay
 
 	private readonly _onDidChangeAuxiliaryBarMaximized = this._register(new Emitter<void>());
 	readonly onDidChangeAuxiliaryBarMaximized = this._onDidChangeAuxiliaryBarMaximized.event;
-	readonly onDidChangeSideBarMaximized = Event.None;
 
 	private readonly _onDidChangeEditorMaximized = this._register(new Emitter<void>());
 	readonly onDidChangeEditorMaximized = this._onDidChangeEditorMaximized.event;
@@ -3080,14 +3079,6 @@ export abstract class Workbench extends Disposable implements IAgentWorkbenchLay
 	}
 
 	isAuxiliaryBarMaximized(): boolean {
-		return false; // Maximize not supported
-	}
-
-	setSideBarMaximized(_maximized: boolean): boolean {
-		return false; // Maximize not supported
-	}
-
-	isSideBarMaximized(): boolean {
 		return false; // Maximize not supported
 	}
 

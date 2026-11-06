@@ -223,26 +223,7 @@ body .monaco-workbench.lcars {
 	background-size: 100% 100%;
 }
 
-/* ---------- Side bar: elbow cap and colored section bars ---------- */
-
-.lcars .part.sidebar,
-.lcars .part.auxiliarybar {
-	border-top-left-radius: var(--lcars-elbow-radius);
-	overflow: hidden;
-}
-
-.lcars .part.sidebar::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	width: 6px;
-	background: var(--lcars-orange);
-	border-top-left-radius: var(--lcars-elbow-radius);
-	pointer-events: none;
-	z-index: 5;
-}
+/* ---------- Side bar: colored section headers ---------- */
 
 .lcars .part.sidebar > .title > .title-label h2 {
 	color: var(--lcars-orange);
@@ -305,11 +286,6 @@ body .monaco-workbench.lcars {
 
 .lcars .part.panel > .composite.title .composite-bar .action-item.checked .action-label {
 	background: var(--lcars-orange);
-}
-
-.lcars .part.panel {
-	border-top: 4px solid var(--lcars-purple);
-	border-top-left-radius: var(--lcars-elbow-radius);
 }
 
 /* ---------- Status bar: segmented pills ---------- */
