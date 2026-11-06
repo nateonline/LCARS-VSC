@@ -7,6 +7,16 @@
  * LCARS-VSC visual language. Everything is scoped to `.lcars`, which LcarsContribution
  * toggles on the main workbench container. Motion is further gated by `.lcars-animated`
  * (disabled by the `lcars.animations.enabled` setting or `prefers-reduced-motion`).
+ *
+ * The frame around the editor is scoped to `.lcars-frame`, toggled by LcarsFrame together
+ * with the geometry it measures (`lcarsFrame.ts`):
+ *   Area 1  activity bar   the rail: a column of blocks between a top cap and a bottom cap
+ *   Area 2  side bar       the column: its title caps the upper elbow, which curves into the
+ *                          editor tabs; it continues into the status bar as the lower elbow
+ *   Area 3  editor tabs    segments of the thin top bar
+ *   Area 4  status bar     the thin bottom bar; its items start after the lower elbow's curve
+ *                          and are separated by black breaks
+ *   Area 5  editor         the black space the frame encloses
  */
 
 .monaco-workbench.lcars {
@@ -22,6 +32,24 @@
 	--lcars-cap-radius: 999px;
 	--lcars-elbow-radius: 36px;
 	--lcars-font: "Antonio", "Oswald", "Helvetica Neue Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+
+	/* Frame colors, after the slate panels of mewho.com/titan */
+	--lcars-frame: #303749;
+	--lcars-frame-rail: #52586e;
+	--lcars-frame-light: #8a90a8;
+	--lcars-frame-dark: #1e2329;
+	--lcars-frame-foreground: #b4bad0;
+
+	/* Frame geometry */
+	--lcars-break: 4px; /* black break between blocks and between bar segments */
+	--lcars-gap: 6px; /* black gap between the rail and the column */
+	--lcars-bar: 22px; /* thin horizontal bars: compact editor tabs and status bar items */
+	--lcars-cap: 35px; /* side bar title; keep in sync with LCARS_FRAME_CAP_HEIGHT */
+	--lcars-elbow-inner: 13px; /* cap minus bar; keep in sync with LCARS_FRAME_ELBOW_RISE */
+	--lcars-elbow-outer: 32px;
+	--lcars-rail-radius: 24px;
+
+	background-color: var(--lcars-black);
 }
 
 /* Colour utility classes used by the generated ribbon and boot elements */
@@ -69,11 +97,6 @@ body .monaco-workbench.lcars {
 .lcars .lcars-ribbon-top {
 	top: 0;
 	height: 4px;
-}
-
-.lcars .lcars-ribbon-bottom {
-	bottom: 22px;
-	height: 3px;
 }
 
 .lcars .lcars-ribbon-segment {
@@ -182,11 +205,10 @@ body .monaco-workbench.lcars {
 	100% { opacity: 1; clip-path: inset(0 0 0 0); filter: none; }
 }
 
-/* ---------- Title bar ---------- */
+/* ---------- Title bar: window chrome above the frame ---------- */
 
 .lcars .part.titlebar {
 	padding-top: 4px;
-	border-bottom: 3px solid var(--lcars-magenta);
 }
 
 .lcars .part.titlebar .command-center .action-item.command-center-center {
@@ -194,49 +216,92 @@ body .monaco-workbench.lcars {
 	border: 2px solid var(--lcars-purple);
 }
 
-/* ---------- Activity bar: a column of colored blocks ---------- */
+/* ---------- Area 1 - Activity bar: the rail, a column of blocks between two caps ---------- */
 
-.lcars .part.activitybar {
-	border-radius: 0 0 var(--lcars-elbow-radius) 0;
-	overflow: hidden;
+/* The part reserves the cap height above its items (`LCARS_FRAME_CAP_HEIGHT`) */
+.lcars-frame .part.activitybar > .content {
+	margin-top: var(--lcars-cap);
 }
 
-.lcars .part.activitybar .monaco-action-bar .action-item {
-	margin: 3px 0;
+/* Top cap, in line with the side bar title. The bottom cap is drawn in the status bar. */
+.lcars-frame .part.activitybar::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	width: calc(100% - var(--lcars-gap));
+	height: calc(var(--lcars-cap) - var(--lcars-break));
+	background-color: var(--lcars-frame-rail);
+	pointer-events: none;
 }
 
-.lcars .part.activitybar .monaco-action-bar .action-item .action-label {
-	border-radius: 0 var(--lcars-cap-radius) var(--lcars-cap-radius) 0;
-	color: var(--lcars-black);
-	background: linear-gradient(var(--lcars-orange), var(--lcars-orange)) no-repeat left center / 0% 100%;
-	transition: background-size 0.25s ease-out;
+.lcars-frame .part.activitybar.left::after {
+	left: 0;
+	border-top-right-radius: var(--lcars-rail-radius);
 }
 
-.lcars .part.activitybar .monaco-action-bar .action-item:nth-child(4n + 1) .action-label { --lcars-item: var(--lcars-orange); }
-.lcars .part.activitybar .monaco-action-bar .action-item:nth-child(4n + 2) .action-label { --lcars-item: var(--lcars-lavender); }
-.lcars .part.activitybar .monaco-action-bar .action-item:nth-child(4n + 3) .action-label { --lcars-item: var(--lcars-blue); }
-.lcars .part.activitybar .monaco-action-bar .action-item:nth-child(4n) .action-label { --lcars-item: var(--lcars-tan); }
-
-.lcars .part.activitybar .monaco-action-bar .action-item:hover .action-label,
-.lcars .part.activitybar .monaco-action-bar .action-item.checked .action-label {
-	background-image: linear-gradient(var(--lcars-item, var(--lcars-orange)), var(--lcars-item, var(--lcars-orange)));
-	background-size: 100% 100%;
+.lcars-frame .part.activitybar.right::after {
+	right: 0;
+	border-top-left-radius: var(--lcars-rail-radius);
 }
 
-/* ---------- Side bar: colored section headers ---------- */
+/* Each item is a block; the black gap toward the side bar separates the rail from the column */
+.lcars .part.activitybar > .content :not(.monaco-menu) > .monaco-action-bar .action-label {
+	width: calc(var(--activity-bar-width, 48px) - var(--lcars-gap));
+	height: calc(var(--activity-bar-action-height, 48px) - var(--lcars-break));
+	margin-bottom: var(--lcars-break);
+	border-radius: 0;
+	background-color: var(--lcars-frame);
+	transition: background-color 0.2s ease-out;
+}
+
+.lcars .part.activitybar.right > .content :not(.monaco-menu) > .monaco-action-bar .action-label {
+	margin-left: var(--lcars-gap);
+}
+
+.lcars .part.activitybar > .content :not(.monaco-menu) > .monaco-action-bar .action-item:nth-child(3n + 2) .action-label {
+	background-color: var(--lcars-frame-rail);
+}
+
+.lcars .part.activitybar > .content :not(.monaco-menu) > .monaco-action-bar .action-item:nth-child(3n) .action-label {
+	background-color: var(--lcars-frame-dark);
+}
+
+.lcars .part.activitybar > .content :not(.monaco-menu) > .monaco-action-bar .action-item:hover .action-label {
+	background-color: var(--lcars-frame-light);
+}
+
+.lcars .part.activitybar > .content :not(.monaco-menu) > .monaco-action-bar .action-item.checked .action-label {
+	background-color: var(--lcars-orange);
+}
+
+/* ---------- Area 2 - Side bar: the column, whose title caps the upper elbow ---------- */
+
+.lcars-frame .part.sidebar > .title {
+	background-color: var(--lcars-frame);
+}
+
+.lcars-frame .part.sidebar.left > .title {
+	padding-left: var(--lcars-elbow-outer);
+	border-top-left-radius: var(--lcars-elbow-outer);
+}
+
+.lcars-frame .part.sidebar.right > .title {
+	padding-right: var(--lcars-elbow-outer);
+	border-top-right-radius: var(--lcars-elbow-outer);
+}
 
 .lcars .part.sidebar > .title > .title-label h2 {
-	color: var(--lcars-orange);
+	color: var(--lcars-frame-foreground);
 	font-size: 14px;
 	letter-spacing: 0.15em;
 }
 
+/* Section headers are data blocks, each separated from the one above by a black break */
 .lcars .monaco-pane-view .pane > .pane-header {
 	color: var(--lcars-black);
-	margin: 2px 0;
-	border-radius: 0 var(--lcars-cap-radius) var(--lcars-cap-radius) 0;
 	background-color: var(--lcars-purple);
-	transition: filter 0.2s ease-out, padding-left 0.25s ease-out;
+	box-shadow: inset 0 var(--lcars-break) 0 var(--lcars-black);
+	transition: filter 0.2s ease-out;
 }
 
 .lcars .monaco-pane-view .pane:nth-child(4n + 1) > .pane-header { background-color: var(--lcars-purple); }
@@ -246,7 +311,6 @@ body .monaco-workbench.lcars {
 
 .lcars .monaco-pane-view .pane > .pane-header:hover {
 	filter: brightness(1.2);
-	padding-left: 6px;
 }
 
 .lcars .monaco-pane-view .pane > .pane-header .actions .action-label,
@@ -254,31 +318,62 @@ body .monaco-workbench.lcars {
 	color: var(--lcars-black);
 }
 
-/* ---------- Editor tabs: pill-ended tabs with a hover swipe ---------- */
+/* ---------- Area 3 - Editor tabs: segments of the thin top bar ---------- */
+
+/* Tabs start once the upper elbow's curve has levelled out; only the tab row is part of the bar */
+.lcars .part.editor > .content .editor-group-container > .title > .tabs-and-actions-container {
+	padding-left: var(--lcars-elbow-inner);
+	background-color: var(--lcars-frame);
+}
 
 .lcars .part.editor > .content .editor-group-container > .title .tabs-container > .tab {
-	margin: 4px 3px 0 0;
-	border-radius: var(--lcars-cap-radius) var(--lcars-cap-radius) 0 0;
-	border-bottom: 3px solid var(--lcars-magenta);
-	background-image: linear-gradient(var(--lcars-tan), var(--lcars-tan));
-	background-repeat: no-repeat;
-	background-position: left center;
-	background-size: 0% 100%;
-	transition: background-size 0.3s ease-out;
+	border-right: var(--lcars-break) solid var(--lcars-black);
+	transition: background-color 0.2s ease-out;
 }
 
-.lcars .part.editor > .content .editor-group-container > .title .tabs-container > .tab:hover {
-	background-size: 100% 100%;
+.lcars .part.editor > .content .editor-group-container > .title .tabs-container > .tab:first-child {
+	border-left: var(--lcars-break) solid var(--lcars-black);
 }
 
-.lcars .part.editor > .content .editor-group-container > .title .tabs-container > .tab.active {
-	border-bottom-color: var(--lcars-orange);
+/* An empty editor group hides its tabs, so draw the bar it would have shown */
+.lcars-frame .part.editor > .content .editor-group-container.empty::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: var(--lcars-bar);
+	background-color: var(--lcars-frame);
+	pointer-events: none;
 }
 
-/* ---------- Panel and auxiliary bar titles ---------- */
+/* Inner curve of the upper elbow, where the side bar title meets the editor below the tabs */
+.lcars-frame-top-elbow .part.editor::before {
+	content: '';
+	position: absolute;
+	top: var(--lcars-bar);
+	left: 0;
+	z-index: 10;
+	width: var(--lcars-elbow-inner);
+	height: var(--lcars-elbow-inner);
+	background: radial-gradient(circle at 100% 100%, transparent calc(var(--lcars-elbow-inner) - 0.5px), var(--lcars-frame) var(--lcars-elbow-inner));
+	pointer-events: none;
+}
+
+.lcars-frame-top-elbow.lcars-frame-mirrored .part.editor::before {
+	left: auto;
+	right: 0;
+	background: radial-gradient(circle at 0 100%, transparent calc(var(--lcars-elbow-inner) - 0.5px), var(--lcars-frame) var(--lcars-elbow-inner));
+}
+
+/* Keep the breadcrumbs clear of the curve */
+.lcars-frame-top-elbow .part.editor > .content .editor-group-container > .title .breadcrumbs-control {
+	padding-left: var(--lcars-elbow-inner);
+}
+
+/* ---------- Panel and secondary side bar titles ---------- */
 
 .lcars .part.panel > .composite.title .composite-bar .action-item .action-label {
-	border-radius: var(--lcars-cap-radius);
 	padding: 2px 14px;
 	color: var(--lcars-black);
 	background: var(--lcars-lavender);
@@ -288,19 +383,135 @@ body .monaco-workbench.lcars {
 	background: var(--lcars-orange);
 }
 
-/* ---------- Status bar: segmented pills ---------- */
-
-.lcars .part.statusbar {
-	border-top: 2px solid var(--lcars-black);
+/* The secondary side bar's title continues the thin top bar across the window */
+.lcars-frame .part.auxiliarybar > .composite.title {
+	align-items: flex-start;
+	background: linear-gradient(var(--lcars-frame), var(--lcars-frame)) no-repeat;
+	background-size: calc(100% - var(--lcars-break)) var(--lcars-bar);
 }
 
-.lcars .part.statusbar .statusbar-item > .statusbar-item-label {
-	border-radius: var(--lcars-cap-radius);
-	padding: 0 10px;
+.lcars-frame .part.auxiliarybar.right > .composite.title {
+	background-position: right top;
 }
 
-.lcars .part.statusbar .statusbar-item:nth-child(odd) > .statusbar-item-label {
-	background-color: color-mix(in srgb, var(--lcars-black) 14%, transparent);
+.lcars-frame .part.auxiliarybar.left > .composite.title {
+	background-position: left top;
+}
+
+.lcars-frame .part.auxiliarybar > .composite.title > *,
+.lcars-frame .part.auxiliarybar > .composite.title .composite-bar,
+.lcars-frame .part.auxiliarybar > .composite.title .monaco-action-bar,
+.lcars-frame .part.auxiliarybar > .composite.title .actions-container,
+.lcars-frame .part.auxiliarybar > .composite.title .composite-bar .action-item {
+	height: var(--lcars-bar);
+}
+
+.lcars-frame .part.auxiliarybar > .composite.title .composite-bar .action-item .action-label {
+	line-height: var(--lcars-bar);
+}
+
+/* ---------- Area 4 - Status bar: the thin bottom bar and the lower elbow ---------- */
+
+/*
+ * The part reserves `--lcars-elbow-inner` above its items (`LCARS_FRAME_ELBOW_RISE`). The bar
+ * starts where the side bar ends (`--lcars-bar-start`); before it, the left items' pseudo-elements
+ * draw the rail's bottom cap and the column's lower elbow, which inherits the status bar's color
+ * so it follows states such as debugging.
+ */
+.monaco-workbench.lcars-frame .part.statusbar {
+	position: relative;
+	height: 100%;
+	padding-top: var(--lcars-elbow-inner);
+	padding-left: var(--lcars-bar-start, 0);
+	background-clip: content-box;
+}
+
+.monaco-workbench.lcars-frame.lcars-frame-mirrored .part.statusbar {
+	padding-left: 0;
+	padding-right: var(--lcars-bar-start, 0);
+}
+
+.lcars-frame .part.statusbar > .left-items {
+	padding-left: var(--lcars-elbow-inner);
+	background-color: inherit;
+}
+
+.lcars-frame.lcars-frame-mirrored .part.statusbar > .left-items {
+	padding-left: 0;
+}
+
+.lcars-frame.lcars-frame-mirrored .part.statusbar > .right-items {
+	padding-right: var(--lcars-elbow-inner);
+}
+
+/* Bottom cap of the rail */
+.lcars-frame.lcars-frame-rail .part.statusbar > .left-items::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: var(--lcars-rail-offset);
+	width: calc(var(--lcars-rail-width) - var(--lcars-gap));
+	background-color: var(--lcars-frame-rail);
+	border-bottom-right-radius: var(--lcars-rail-radius);
+	pointer-events: none;
+}
+
+.lcars-frame.lcars-frame-rail.lcars-frame-mirrored .part.statusbar > .left-items::before {
+	left: auto;
+	right: var(--lcars-rail-offset);
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: var(--lcars-rail-radius);
+}
+
+/* Lower elbow: the column's bottom cap and the inner curve into the bar */
+.lcars-frame.lcars-frame-column .part.statusbar > .left-items::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: var(--lcars-column-offset);
+	width: calc(var(--lcars-column-width) + var(--lcars-elbow-inner));
+	background-color: inherit;
+	border-bottom-left-radius: var(--lcars-elbow-outer);
+	mask-image:
+		linear-gradient(#000, #000),
+		radial-gradient(circle at 100% 0, transparent calc(var(--lcars-elbow-inner) - 0.5px), #000 var(--lcars-elbow-inner)),
+		linear-gradient(#000, #000);
+	mask-size:
+		var(--lcars-column-width) 100%,
+		var(--lcars-elbow-inner) var(--lcars-elbow-inner),
+		var(--lcars-elbow-inner) calc(100% - var(--lcars-elbow-inner));
+	mask-position: 0 0, 100% 0, 100% 100%;
+	mask-repeat: no-repeat;
+	pointer-events: none;
+}
+
+.lcars-frame.lcars-frame-column.lcars-frame-mirrored .part.statusbar > .left-items::after {
+	left: auto;
+	right: var(--lcars-column-offset);
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: var(--lcars-elbow-outer);
+	mask-image:
+		linear-gradient(#000, #000),
+		radial-gradient(circle at 0 0, transparent calc(var(--lcars-elbow-inner) - 0.5px), #000 var(--lcars-elbow-inner)),
+		linear-gradient(#000, #000);
+	mask-position: 100% 0, 0 0, 0 100%;
+}
+
+/* Items are segments of the bar, separated from each other and from the bar's middle by black breaks */
+.lcars .part.statusbar > .items-container > .statusbar-item.left {
+	border-right: var(--lcars-break) solid var(--lcars-black);
+}
+
+.lcars .part.statusbar > .items-container > .statusbar-item.right {
+	border-left: var(--lcars-break) solid var(--lcars-black);
+}
+
+.lcars .part.statusbar > .items-container > .statusbar-item > .statusbar-item-label {
+	margin-left: 0;
+	margin-right: 0;
+	padding: 0 8px;
 }
 
 .lcars .part.statusbar .statusbar-item[id="lcars.stardate"] > .statusbar-item-label {

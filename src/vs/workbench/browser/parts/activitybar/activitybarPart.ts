@@ -9,7 +9,7 @@ import { localize, localize2 } from '../../../../nls.js';
 import { ActionsOrientation } from '../../../../base/browser/ui/actionbar/actionbar.js';
 import { Part } from '../../part.js';
 import { mainWindow } from '../../../../base/browser/window.js';
-import { ActivityBarPosition, IWorkbenchLayoutService, LayoutSettings, Parts, Position, FLOATING_PANEL_INNER_MARGIN, FLOATING_PANEL_MARGIN, getFloatingPanelMargin, getFloatingPanelOuterMargin, isFloatingTopEdgeExposed, isCompactMenuInTitlebar } from '../../../services/layout/browser/layoutService.js';
+import { ActivityBarPosition, IWorkbenchLayoutService, LayoutSettings, Parts, Position, FLOATING_PANEL_INNER_MARGIN, FLOATING_PANEL_MARGIN, LCARS_FRAME_CAP_HEIGHT, getFloatingPanelMargin, getFloatingPanelOuterMargin, isFloatingTopEdgeExposed, isCompactMenuInTitlebar, isLcarsFrameEnabled } from '../../../services/layout/browser/layoutService.js';
 import { IInstantiationService, ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { DisposableStore, MutableDisposable } from '../../../../base/common/lifecycle.js';
 import { ToggleSidebarPositionAction, ToggleSidebarVisibilityAction } from '../../actions/layoutActions.js';
@@ -202,8 +202,9 @@ export class ActivitybarPart extends Part {
 			}
 
 			// Floating panels changes the reserved left/bottom gutter (and therefore
-			// the fixed part width): signal the grid that the size constraint changed.
-			if (e.affectsConfiguration(LayoutSettings.MODERN_UI) || e.affectsConfiguration(LayoutSettings.MODERN_UI_DENSITY)) {
+			// the fixed part width) and the LCARS frame the reserved top cap: signal the
+			// grid that the size constraint changed.
+			if (e.affectsConfiguration(LayoutSettings.MODERN_UI) || e.affectsConfiguration(LayoutSettings.MODERN_UI_DENSITY) || e.affectsConfiguration(LayoutSettings.LCARS_FRAME)) {
 				this.updateCompactStyle();
 				this.recreateCompositeBar();
 				this._onDidChange.fire(undefined);
@@ -385,13 +386,21 @@ export class ActivitybarPart extends Part {
 
 		const { top, bottom } = this.getFloatingGutters();
 		const contentWidth = Math.max(0, width - this.floatingHorizontalGutter);
-		const contentHeight = Math.max(0, height - top - bottom);
+		const contentHeight = Math.max(0, height - top - bottom - this.lcarsFrameCap);
 
 		// Layout contents
 		const contentAreaSize = super.layoutContents(contentWidth, contentHeight).contentSize;
 
 		// The first item has no preceding gap, so give one gap back to the composite bar.
 		this.compositeBar.value?.layout(contentWidth, contentAreaSize.height + this.actionGap);
+	}
+
+	/**
+	 * Space reserved above the items for the LCARS frame cap, which `lcars.css` draws in
+	 * line with the side bar title by offsetting the content.
+	 */
+	private get lcarsFrameCap(): number {
+		return isLcarsFrameEnabled(this.layoutService, this.configurationService) ? LCARS_FRAME_CAP_HEIGHT : 0;
 	}
 
 	/**

@@ -56,7 +56,30 @@ export const enum LayoutSettings {
 	MODERN_UI_FROSTED_GLASS = 'workbench.modernUIFrostedGlass',
 	MODERN_UI_FROSTED_GLASS_OPACITY = 'workbench.modernUIFrostedGlassOpacity',
 	MODERN_UI_EDITOR_TAB_STYLE = 'workbench.experimental.modernUIEditorTabStyle',
-	MODERN_UI_UPPERCASE_VIEW_HEADERS = 'workbench.experimental.modernUIUppercaseViewHeaders'
+	MODERN_UI_UPPERCASE_VIEW_HEADERS = 'workbench.experimental.modernUIUppercaseViewHeaders',
+	LCARS_FRAME = 'lcars.frame.enabled'
+}
+
+/**
+ * Height (in pixels) of the LCARS frame cap above the activity bar items. It lines up with
+ * the side bar title, which forms the cap of the frame's upper elbow. Keep in sync with
+ * `--lcars-cap` in `src/vs/workbench/contrib/lcars/browser/media/lcars.css`.
+ */
+export const LCARS_FRAME_CAP_HEIGHT = 35;
+
+/**
+ * Height (in pixels) reserved above the main status bar items for the inner curves of the
+ * LCARS frame's lower elbows. Keep in sync with `--lcars-elbow-inner` in `lcars.css`.
+ */
+export const LCARS_FRAME_ELBOW_RISE = 13;
+
+/**
+ * Whether parts reserve space for the LCARS frame: the {@link LayoutSettings.LCARS_FRAME}
+ * setting (registered by `src/vs/workbench/contrib/lcars`) is on and the floating panels
+ * presentation, which has its own card design, is off.
+ */
+export function isLcarsFrameEnabled(layoutService: IWorkbenchLayoutService, configurationService: IConfigurationService): boolean {
+	return configurationService.getValue<boolean>(LayoutSettings.LCARS_FRAME) === true && !layoutService.isFloatingPanelsEnabled();
 }
 
 export const enum ModernUIFrostedGlassOpacity {

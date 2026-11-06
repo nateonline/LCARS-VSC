@@ -19,7 +19,7 @@ import { contrastBorder, activeContrastBorder } from '../../../../platform/theme
 import { EventHelper, addDisposableListener, EventType, clearNode, getWindow, isHTMLElement, $ } from '../../../../base/browser/dom.js';
 import { createStyleSheet } from '../../../../base/browser/domStylesheets.js';
 import { IStorageService } from '../../../../platform/storage/common/storage.js';
-import { Parts, IWorkbenchLayoutService, LayoutSettings } from '../../../services/layout/browser/layoutService.js';
+import { Parts, IWorkbenchLayoutService, LayoutSettings, LCARS_FRAME_ELBOW_RISE, isLcarsFrameEnabled } from '../../../services/layout/browser/layoutService.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { equals } from '../../../../base/common/arrays.js';
@@ -140,10 +140,21 @@ class StatusbarPart extends Part implements IStatusbarEntryContainer {
 		return this.layoutService.isModernUICompact() ? StatusbarPart.COMPACT_DENSITY_FLOATING_BOTTOM_PADDING : StatusbarPart.FLOATING_BOTTOM_PADDING;
 	}
 
+	/**
+	 * Space reserved above the main status bar items for the LCARS frame's lower elbows,
+	 * which curve from the side columns into the status bar. Applied as top padding in `lcars.css`.
+	 */
+	private get lcarsFrameRise(): number {
+		if (this.getId() !== Parts.STATUSBAR_PART || !isLcarsFrameEnabled(this.layoutService, this.configurationService)) {
+			return 0;
+		}
+		return LCARS_FRAME_ELBOW_RISE;
+	}
+
 	readonly minimumWidth: number = 0;
 	readonly maximumWidth: number = Number.POSITIVE_INFINITY;
-	get minimumHeight(): number { return StatusbarPart.HEIGHT + this.floatingBottomPadding; }
-	get maximumHeight(): number { return StatusbarPart.HEIGHT + this.floatingBottomPadding; }
+	get minimumHeight(): number { return StatusbarPart.HEIGHT + this.floatingBottomPadding + this.lcarsFrameRise; }
+	get maximumHeight(): number { return StatusbarPart.HEIGHT + this.floatingBottomPadding + this.lcarsFrameRise; }
 
 	//#endregion
 
@@ -238,11 +249,11 @@ class StatusbarPart extends Part implements IStatusbarEntryContainer {
 			updateStyles();
 		}));
 
-		// Floating panels changes the reserved bottom padding (and therefore the
-		// part height) for the main status bar only: signal the grid that the size
-		// constraint changed.
+		// Floating panels changes the reserved bottom padding and the LCARS frame the
+		// reserved top rise (and therefore the part height) for the main status bar
+		// only: signal the grid that the size constraint changed.
 		this._register(this.configurationService.onDidChangeConfiguration(e => {
-			if (this.getId() === Parts.STATUSBAR_PART && (e.affectsConfiguration(LayoutSettings.MODERN_UI) || e.affectsConfiguration(LayoutSettings.MODERN_UI_DENSITY))) {
+			if (this.getId() === Parts.STATUSBAR_PART && (e.affectsConfiguration(LayoutSettings.MODERN_UI) || e.affectsConfiguration(LayoutSettings.MODERN_UI_DENSITY) || e.affectsConfiguration(LayoutSettings.LCARS_FRAME))) {
 				this._onDidChange.fire(undefined);
 				if (this.element) {
 					this.updateStyles();

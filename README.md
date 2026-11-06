@@ -7,13 +7,19 @@ A fork of [Visual Studio Code - Open Source](https://github.com/microsoft/vscode
 
 ## LCARS Interface
 
-`src/vs/workbench/contrib/lcars` restyles the workbench with colored pill-ended tabs, section headers and activity-bar blocks, condensed uppercase chrome, animated decorative ribbons, a stardate readout in the status bar, and a boot sequence in which the panels power up over about four seconds. Settings: `lcars.animations.enabled` and `lcars.animations.bootSequence`; animations are also disabled when the OS requests reduced motion.
+`src/vs/workbench/contrib/lcars` restyles the workbench with block-style activity items, section headers and tabs, condensed uppercase chrome, an animated decorative ribbon above the title bar, a stardate readout in the status bar, and a boot sequence in which the panels power up over about four seconds. Settings: `lcars.animations.enabled` and `lcars.animations.bootSequence`; animations are also disabled when the OS requests reduced motion.
 
-### Split-pane layout and section frames
+### Frame layout
 
-The Explorer, editor, panel and secondary side bar use VS Code's normal resizable split layout. Opening a file or showing another section no longer hides the other sections. The full-window hub, Back/Editor status-bar switcher, `Alt+Home` hub shortcut, view-swipe transitions, and `lcars.views.enabled` setting have been removed. Normal user-controlled panel and secondary-side-bar maximization remain available.
+The Explorer, editor, panel and secondary side bar keep VS Code's normal resizable split layout, framed in the style of the LCARS panels at [mewho.com/titan](https://www.mewho.com/titan/):
 
-The next visual direction uses thin horizontal bars and wider vertical bars to separate sections, with independently selected edges rather than a four-sided frame on every section. Bars may eventually contain labels, controls or data. Exact edge placement, sizing and content are pending mockups; no new frames or data slots are imposed yet. Existing overlay strips and forced section corners have been removed so future frames can reserve real layout space instead of covering content or resize handles.
+1. **Activity bar** — the rail: a column of blocks between rounded top and bottom caps, running to the bottom of the window.
+2. **Primary side bar** — the column: its title caps an elbow that curves into the editor tabs, and its bottom cap curves into the status bar.
+3. **Editor tabs** — segments of the thin top bar, separated by black breaks. The secondary side bar's title continues the bar, and an empty editor area still shows it.
+4. **Status bar** — the thin bottom bar. Its items start once the lower elbow's curve has levelled out and are separated by black breaks.
+5. **Editor** — the black space the frame encloses, together with the panel and the secondary side bar.
+
+The activity bar and status bar reserve space for the caps and curves (`LCARS_FRAME_*` in `src/vs/workbench/services/layout/browser/layoutService.ts`), so the frame never covers content or resize handles. `lcarsFrame.ts` measures where the parts are and `media/lcars.css` draws the frame; it follows side bar resizing, a hidden side bar and a side bar on the right. The frame is drawn around the classic layout, so LCARS turns `workbench.experimental.modernUI` off and uses compact editor tabs by default. Setting: `lcars.frame.enabled`. Frame colors and sizes are CSS variables at the top of `lcars.css`.
 
 ## Building and Running
 

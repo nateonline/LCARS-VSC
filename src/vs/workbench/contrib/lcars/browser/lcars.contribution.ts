@@ -11,8 +11,9 @@ import { IConfigurationService } from '../../../../platform/configuration/common
 import { ConfigurationScope, Extensions as ConfigurationExtensions, IConfigurationRegistry } from '../../../../platform/configuration/common/configurationRegistry.js';
 import { Registry } from '../../../../platform/registry/common/platform.js';
 import { IWorkbenchContribution, registerWorkbenchContribution2, WorkbenchPhase } from '../../../common/contributions.js';
-import { IWorkbenchLayoutService } from '../../../services/layout/browser/layoutService.js';
+import { IWorkbenchLayoutService, LayoutSettings } from '../../../services/layout/browser/layoutService.js';
 import { IStatusbarService, StatusbarAlignment } from '../../../services/statusbar/browser/statusbar.js';
+import { LcarsFrame } from './lcarsFrame.js';
 
 const LCARS_CLASS = 'lcars';
 const LCARS_ANIMATED_CLASS = 'lcars-animated';
@@ -32,6 +33,12 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 	title: localize('lcarsConfigurationTitle', "LCARS"),
 	type: 'object',
 	properties: {
+		[LayoutSettings.LCARS_FRAME]: {
+			type: 'boolean',
+			default: true,
+			scope: ConfigurationScope.APPLICATION,
+			markdownDescription: localize('lcars.frame.enabled', "Controls whether the LCARS frame encloses the editor: the activity bar and primary side bar run down to the bottom of the window, the side bar curves into the editor tabs and the status bar, and status bar items start after that curve. Requires {0} to be off.", '`#workbench.experimental.modernUI#`'),
+		},
 		[ENABLE_ANIMATIONS_SETTING]: {
 			type: 'boolean',
 			default: true,
@@ -46,6 +53,14 @@ Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).regis
 		}
 	}
 });
+
+// The LCARS frame is drawn around the classic, edge-to-edge layout with tabs as thin as its bars.
+Registry.as<IConfigurationRegistry>(ConfigurationExtensions.Configuration).registerDefaultConfigurations([{
+	overrides: {
+		[LayoutSettings.MODERN_UI]: false,
+		'window.density.editorTabHeight': 'compact'
+	}
+}]);
 
 /**
  * Applies the LCARS visual language to the workbench: it toggles the root classes that
@@ -95,7 +110,6 @@ class LcarsContribution extends Disposable implements IWorkbenchContribution {
 		const store = new DisposableStore();
 		this.ribbonDisposables.value = store;
 		this.createRibbon(container, 'lcars-ribbon-top', store, enabled);
-		this.createRibbon(container, 'lcars-ribbon-bottom', store, enabled);
 	}
 
 	/** Creates a strip of colored pills whose widths shift and which swipe on and off at random. */
@@ -197,3 +211,4 @@ class LcarsContribution extends Disposable implements IWorkbenchContribution {
 }
 
 registerWorkbenchContribution2(LcarsContribution.ID, LcarsContribution, WorkbenchPhase.BlockRestore);
+registerWorkbenchContribution2(LcarsFrame.ID, LcarsFrame, WorkbenchPhase.BlockRestore);
